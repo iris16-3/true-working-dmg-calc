@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMG CALC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0d0d0d;--surface:#141414;--surface2:#1a1a1a;--border:#2a2a2a;
+  --yellow:#f5c400;--ydim:#b38f00;--ybg:rgba(245,196,0,0.06);
+  --red:#c0392b;--green:#27ae60;--text:#e8e8e8;--muted:#666;
+  --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;}
+
+/* ── INPUTS ── */
+input[type="text"],input[type="number"],textarea,select{
+  background:var(--bg);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:13px;padding:8px 12px;width:100%;outline:none;transition:border-color .15s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--yellow);}
+textarea{resize:vertical;min-height:56px;}
+select option{background:var(--bg);}
+.cb-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.cb-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer;}
+.cb-row label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;margin:0;}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;cursor:pointer;transition:opacity .15s;}
+.btn:hover{opacity:.8;}.btn:active{opacity:.6;}
+.btn-primary  {background:var(--yellow);color:#000;font-weight:bold;}
+.btn-secondary{background:transparent;color:var(--yellow);border:1px solid var(--yellow);}
+.btn-danger   {background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn-ghost    {background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-green    {background:var(--green);color:#fff;font-weight:bold;}
+.btn-sm{font-size:11px;padding:5px 10px;letter-spacing:1px;}
+.btn-xs{font-size:10px;padding:3px 8px;letter-spacing:1px;}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:40px 20px 60px;gap:20px;}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:32px 36px;width:100%;max-width:560px;}
+.setup-box h1{font-family:var(--mono);font-size:22px;color:var(--yellow);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;}
+.setup-box .sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:24px;}
+.frow{margin-bottom:16px;}
+.frow>label{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:1px;}
+.char-inputs{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+#cc-row{display:flex;align-items:center;gap:12px;}
+#cc-row input{width:80px;}
+
+/* ── PRESET LIBRARY ── */
+.lib-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--ydim);padding:24px 32px;width:100%;max-width:560px;}
+.lib-box h2{font-family:var(--mono);font-size:13px;color:var(--ydim);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
+.lib-add-row{display:flex;gap:8px;margin-bottom:16px;}
+.lib-add-row input{flex:1;}
+.pc-list{display:flex;flex-direction:column;gap:10px;}
+.pc-card{background:var(--bg);border:1px solid var(--border);padding:12px 14px;}
+.pc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.pc-meta{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.pc-id{font-family:var(--mono);font-size:11px;color:var(--ydim);letter-spacing:2px;}
+.pc-name-static{font-family:var(--mono);font-size:14px;color:var(--text);}
+.pc-name-edit{display:none;}
+.pc-name-edit.open{display:block;}
+.pc-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;}
+.pc-ab-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+.pc-ab-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.pc-ab-info{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:2px;}
+.pc-ab-info .abn{font-family:var(--mono);font-size:12px;color:var(--yellow);}
+.pc-no-ab{font-family:var(--mono);font-size:11px;color:var(--muted);font-style:italic;}
+
+/* ── APP LAYOUT ── */
+#app-screen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+#stats-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;flex-shrink:0;}
+.stats-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.app-title{font-family:var(--mono);font-size:13px;color:var(--yellow);letter-spacing:3px;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:12px;}
+.stat-cell{background:var(--surface2);padding:10px 14px;text-align:center;}
+.stat-cell .lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.stat-cell .val{font-family:var(--mono);font-size:18px;color:var(--yellow);font-weight:bold;}
+#csg{display:flex;gap:8px;flex-wrap:wrap;}
+.csc{background:var(--bg);border:1px solid var(--border);padding:8px 12px;flex:1;min-width:120px;transition:border-color .15s;}
+.csc.preset{cursor:pointer;border-color:var(--ydim);}
+.csc.preset:hover{border-color:var(--yellow);}
+.csc .cn{font-family:var(--mono);font-size:10px;color:var(--ydim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:4px;display:flex;align-items:center;gap:6px;}
+.pbadge{font-family:var(--mono);font-size:9px;color:var(--yellow);border:1px solid var(--ydim);padding:1px 4px;letter-spacing:1px;}
+.csc .cr{display:flex;justify-content:space-between;gap:6px;margin-bottom:2px;}
+.csc .cr span{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.csc .cr strong{font-family:var(--mono);font-size:11px;color:var(--text);}
+.tap-hint{font-family:var(--mono);font-size:9px;color:var(--ydim);margin-top:4px;letter-spacing:1px;}
+
+#effects-bar{background:var(--bg);border-top:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;min-height:36px;align-items:center;}
+.eff-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.eff-chip{font-family:var(--mono);font-size:11px;padding:3px 8px;border:1px solid var(--ydim);color:var(--yellow);background:var(--ybg);white-space:nowrap;}
+.eff-chip .stk{color:var(--muted);font-size:10px;}
+
+#log-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
+#log-area::-webkit-scrollbar{width:4px;}
+#log-area::-webkit-scrollbar-track{background:var(--bg);}
+#log-area::-webkit-scrollbar-thumb{background:var(--border);}
+.empty-log{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-top:40px;letter-spacing:2px;}
+#lab{background:var(--surface);border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+/* ── LOG ENTRY ── */
+.le{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--ydim);padding:12px 14px;}
+.le.editing{border-left-color:var(--yellow);background:var(--surface2);}
+.le-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.le-left{display:flex;flex-direction:column;gap:2px;}
+.le-name{font-family:var(--mono);font-size:14px;color:var(--text);letter-spacing:1px;}
+.le-char{font-family:var(--mono);font-size:10px;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;}
+.le-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.mp{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.mp span{color:var(--text);}
+.mp.dmg span{color:var(--yellow);font-size:13px;font-weight:bold;}
+.le-desc{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;font-style:italic;}
+.le-eff{font-family:var(--mono);font-size:11px;color:var(--ydim);margin-bottom:4px;}
+.le-dmt{font-family:var(--mono);font-size:11px;margin-bottom:6px;}
+.dmt-del{color:#e67e22;}.dmt-dot{color:#8e44ad;}
+.le-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.cdb{font-family:var(--mono);font-size:10px;padding:3px 8px;letter-spacing:1px;}
+.cdb.rdy{color:var(--green);border:1px solid var(--green);}
+.cdb.cool{color:var(--red);border:1px solid var(--red);}
+.ef{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:none;}
+.ef.open{display:block;}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.eg .full{grid-column:1/-1;}
+.ef label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.ea{display:flex;gap:8px;}
+
+/* ── DMG TYPE TABS ── */
+.dtt{display:flex;margin-bottom:12px;}
+.dt{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;flex:1;text-align:center;}
+.dt:not(:last-child){border-right:none;}
+.dt.active{background:var(--ybg);color:var(--yellow);border-color:var(--ydim);}
+.dtf{display:none;}.dtf.active{display:block;}
+
+/* ── MODAL OVERLAYS ── */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;padding:20px;}
+.mov.open{display:flex;}
+.mov.z150{z-index:150;}.mov.z200{z-index:200;}.mov.z300{z-index:300;}
+.mbox{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:28px 32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.mbox::-webkit-scrollbar{width:4px;}
+.mbox::-webkit-scrollbar-track{background:var(--bg);}
+.mbox::-webkit-scrollbar-thumb{background:var(--border);}
+.mbox h2{font-family:var(--mono);font-size:14px;color:var(--yellow);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.mg .full{grid-column:1/-1;}
+.mbox label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.ma{display:flex;gap:10px;margin-top:20px;}
+.sdiv{border:none;border-top:1px solid var(--border);margin:16px 0 12px;}
+.slbl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+
+/* Alert / confirm / reset boxes */
+.abox,.rbox,.cfbox{background:var(--surface);border:1px solid var(--red);border-top:3px solid var(--red);padding:28px 32px;max-width:400px;width:100%;}
+.abox h3,.rbox h3,.cfbox h3{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;}
+.abox p,.rbox p,.cfbox p{font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:20px;line-height:1.7;white-space:pre-line;}
+.aacts,.racts,.cfacts{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* Preset panel (slides from bottom) */
+#pp{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:120;align-items:flex-end;justify-content:center;}
+#pp.open{display:flex;}
+.pp-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:24px 28px;width:100%;max-width:600px;max-height:72vh;display:flex;flex-direction:column;}
+.pp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;}
+.pp-head h3{font-family:var(--mono);font-size:13px;color:var(--yellow);letter-spacing:3px;text-transform:uppercase;}
+.pp-list{overflow-y:auto;display:flex;flex-direction:column;gap:8px;flex:1;}
+.pp-list::-webkit-scrollbar{width:4px;}
+.pp-list::-webkit-scrollbar-track{background:var(--bg);}
+.pp-list::-webkit-scrollbar-thumb{background:var(--border);}
+.pp-row{background:var(--bg);border:1px solid var(--border);padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.pp-info{display:flex;flex-direction:column;gap:3px;}
+.pp-abn{font-family:var(--mono);font-size:13px;color:var(--text);}
+.pp-meta{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.pp-meta span{color:var(--text);}
+.pp-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.pp-no-ab{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;padding:20px;font-style:italic;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     SETUP SCREEN
+══════════════════════════════ -->
+<div id="setup-screen">
+
+  <div class="setup-box">
+    <h1>DMG CALC</h1>
+    <div class="sub">// combat log &amp; damage tracker</div>
+    <div class="frow">
+      <label>Number of Characters</label>
+      <div id="cc-row">
+        <input type="number" id="char-count" min="1" max="10" value="1" style="width:80px">
+        <button class="btn btn-secondary btn-sm" onclick="updateCharInputs()">SET</button>
+      </div>
+    </div>
+    <div class="frow">
+      <label>Character Names</label>
+      <div class="char-inputs" id="char-inputs">
+        <input type="text" placeholder="Name or #ID to load preset" data-idx="0">
+      </div>
+      <div class="hint">// plain name = regular character &nbsp;|&nbsp; #ID (e.g. #2) = load preset</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="startApp()">START SESSION</button>
+  </div>
+
+  <div class="lib-box">
+    <h2>Preset Characters</h2>
+    <div class="lib-add-row">
+      <input type="text" id="new-pc-id" placeholder="#ID" style="width:70px;flex-shrink:0">
+      <input type="text" id="new-pc-name" placeholder="Character name…">
+      <button class="btn btn-secondary btn-sm" onclick="addPresetChar()">+ ADD</button>
+    </div>
+    <div class="pc-list" id="pc-list">
+      <!-- filled by renderLibrary() -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP SCREEN
+══════════════════════════════ -->
+<div id="app-screen">
+  <div id="stats-bar">
+    <div class="stats-top">
+      <div class="app-title">// DMG CALC</div>
+      <button class="btn btn-danger btn-sm" onclick="openResetModal()">RESET</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-cell"><div class="lbl">Total Time</div><div class="val" id="s-time">0.00s</div></div>
+      <div class="stat-cell"><div class="lbl">Total DMG</div><div class="val" id="s-dmg">0</div></div>
+      <div class="stat-cell"><div class="lbl">Team DPS</div><div class="val" id="s-dps">0.00</div></div>
+    </div>
+    <div id="csg"></div>
+  </div>
+  <div id="effects-bar">
+    <span class="eff-lbl">ACTIVE EFFECTS:</span>
+    <span id="eff-list" style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>
+  </div>
+  <div id="log-area"><div class="empty-log">// no abilities logged yet</div></div>
+  <div id="lab">
+    <button class="btn btn-primary" onclick="openAddModal()">+ LOG ABILITY</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     LOG / REUSE MODAL
+══════════════════════════════ -->
+<div id="log-modal" class="mov z150">
+  <div class="mbox">
+    <h2 id="lm-title">LOG ABILITY</h2>
+    <div class="mg">
+      <div class="full"><label>Character</label><select id="lm-char"></select></div>
+      <div class="full"><label>Ability Name</label><input type="text" id="lm-name" placeholder="e.g. Shot"></div>
+      <div class="full"><label>Description</label><textarea id="lm-desc" placeholder="What does it do?"></textarea></div>
+      <div><label>Cast Time (s)</label><input type="number" id="lm-cast" min="0" step="0.1" placeholder="0"></div>
+      <div><label>Cooldown (s)</label><input type="number" id="lm-cd" min="0" step="0.1" placeholder="0"></div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Damage Type</div>
+    <div class="dtt" id="lm-tabs">
+      <div class="dt active" data-t="normal"  onclick="setTab('lm','normal')">NORMAL</div>
+      <div class="dt"        data-t="delayed" onclick="setTab('lm','delayed')">DELAYED</div>
+      <div class="dt"        data-t="dot"     onclick="setTab('lm','dot')">DOT</div>
+    </div>
+    <div class="dtf active" id="lm-dtf-normal">
+      <div class="mg"><div><label>Damage</label><input type="number" id="lm-dmg-n" min="0" placeholder="0"></div></div>
+    </div>
+    <div class="dtf" id="lm-dtf-delayed">
+      <div class="mg">
+        <div><label>Damage</label><input type="number" id="lm-dmg-d" min="0" placeholder="0"></div>
+        <div><label>Delay (s after cast)</label><input type="number" id="lm-delay" min="0" step="0.1" placeholder="e.g. 3"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:-4px">DMG hits X seconds after cast begins.</div>
+    </div>
+    <div class="dtf" id="lm-dtf-dot">
+      <div class="mg">
+        <div><label>DMG per tick</label><input type="number" id="lm-dmg-t" min="0" placeholder="0"></div>
+        <div><label>Tick every (s)</label><input type="number" id="lm-tick-i" min="0.1" step="0.1" placeholder="e.g. 2"></div>
+        <div><label>Duration (s)</label><input type="number" id="lm-tick-d" min="0" step="0.1" placeholder="e.g. 4"></div>
+        <div style="display:flex;align-items:flex-end"><div id="lm-dot-prev" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:8px"></div></div>
+      </div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Effect (Optional)</div>
+    <div class="mg">
+      <div><label>Effect Name</label><input type="text" id="lm-eff-n" placeholder="e.g. Bleed"></div>
+      <div><label>Effect Duration (s)</label><input type="number" id="lm-eff-d" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><div class="cb-row"><input type="checkbox" id="lm-stacks"><label for="lm-stacks">Effect stacks on reuse (unchecked = refresh)</label></div></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-primary" id="lm-ok" onclick="confirmLogModal()">CONFIRM</button>
+      <button class="btn btn-ghost" onclick="closeLogModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     ABILITY EDITOR MODAL (setup screen)
+══════════════════════════════ -->
+<div id="ae-modal" class="mov z200">
+  <div class="mbox">
+    <h2 id="ae-title">ADD ABILITY</h2>
+    <div class="mg">
+      <div class="full"><label>Ability Name</label><input type="text" id="ae-name" placeholder="e.g. Fireball"></div>
+      <div class="full"><label>Description</label><textarea id="ae-desc" placeholder="What does it do?"></textarea></div>
+      <div><label>Cast Time (s)</label><input type="number" id="ae-cast" min="0" step="0.1" placeholder="0"></div>
+      <div><label>Cooldown (s)</label><input type="number" id="ae-cd" min="0" step="0.1" placeholder="0"></div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Damage Type</div>
+    <div class="dtt" id="ae-tabs">
+      <div class="dt active" data-t="normal"  onclick="setTab('ae','normal')">NORMAL</div>
+      <div class="dt"        data-t="delayed" onclick="setTab('ae','delayed')">DELAYED</div>
+      <div class="dt"        data-t="dot"     onclick="setTab('ae','dot')">DOT</div>
+    </div>
+    <div class="dtf active" id="ae-dtf-normal">
+      <div class="mg"><div><label>Damage</label><input type="number" id="ae-dmg-n" min="0" placeholder="0"></div></div>
+    </div>
+    <div class="dtf" id="ae-dtf-delayed">
+      <div class="mg">
+        <div><label>Damage</label><input type="number" id="ae-dmg-d" min="0" placeholder="0"></div>
+        <div><label>Delay (s after cast)</label><input type="number" id="ae-delay" min="0" step="0.1" placeholder="e.g. 3"></div>
+      </div>
+    </div>
+    <div class="dtf" id="ae-dtf-dot">
+      <div class="mg">
+        <div><label>DMG per tick</label><input type="number" id="ae-dmg-t" min="0" placeholder="0"></div>
+        <div><label>Tick every (s)</label><input type="number" id="ae-tick-i" min="0.1" step="0.1" placeholder="e.g. 2"></div>
+        <div><label>Duration (s)</label><input type="number" id="ae-tick-d" min="0" step="0.1" placeholder="e.g. 4"></div>
+        <div style="display:flex;align-items:flex-end"><div id="ae-dot-prev" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:8px"></div></div>
+      </div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Effect (Optional)</div>
+    <div class="mg">
+      <div><label>Effect Name</label><input type="text" id="ae-eff-n" placeholder="e.g. Bleed"></div>
+      <div><label>Effect Duration (s)</label><input type="number" id="ae-eff-d" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><div class="cb-row"><input type="checkbox" id="ae-stacks"><label for="ae-stacks">Effect stacks on reuse</label></div></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-primary" onclick="confirmAbilityEditor()">SAVE ABILITY</button>
+      <button class="btn btn-ghost" onclick="closeAeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PRESET ABILITIES PANEL (in-app)
+══════════════════════════════ -->
+<div id="pp">
+  <div class="pp-box">
+    <div class="pp-head">
+      <h3 id="pp-title">ABILITIES</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closePP()">CLOSE</button>
+    </div>
+    <div class="pp-list" id="pp-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     ALERT MODAL (cooldown warning)
+══════════════════════════════ -->
+<div id="alert-modal" class="mov z300">
+  <div class="abox">
+    <h3>⚠ ABILITY ON COOLDOWN</h3>
+    <p id="alert-msg"></p>
+    <div class="aacts">
+      <button class="btn btn-danger btn-sm" id="alert-force">USE REGARDLESS</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAlert()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     RESET MODAL
+══════════════════════════════ -->
+<div id="reset-modal" class="mov z300">
+  <div class="rbox">
+    <h3>⚠ RESET</h3>
+    <p>Choose an option. Both clear the current log and cannot be undone.</p>
+    <div class="racts" style="flex-direction:column;gap:8px">
+      <button class="btn btn-danger btn-sm" style="width:100%" onclick="doReset()">CLEAR LOG — keep characters</button>
+      <button class="btn btn-danger btn-sm" style="width:100%;opacity:.75" onclick="goToSetup()">NEW SESSION — back to character setup</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="closeResetModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CONFIRM MODAL (generic)
+══════════════════════════════ -->
+<div id="cf-modal" class="mov z300">
+  <div class="cfbox">
+    <h3 id="cf-title">CONFIRM</h3>
+    <p id="cf-msg"></p>
+    <div class="cfacts">
+      <button class="btn btn-danger btn-sm" id="cf-ok">CONFIRM</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeCF()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════
+function savePresets(){localStorage.setItem('dmgcalc_v2',JSON.stringify({chars:presetChars,nextPCId,nextAbId}));}
+function loadPresets(){
+  try{
+    const raw=localStorage.getItem('dmgcalc_v2');
+    if(raw){const d=JSON.parse(raw);return d;}
+  }catch(e){}
+  return null;
+}
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+const _saved = loadPresets();
+let presetChars = _saved ? _saved.chars : [];      // [{id,name,abilities:[{id,name,desc,castTime,cooldown,dmgType,dmg,delay,dotInterval,dotDuration,effectName,effectDuration,stacks}]}]
+let nextPCId    = _saved ? _saved.nextPCId  : 1;
+let nextAbId    = _saved ? _saved.nextAbId  : 1;
+
+let characters  = [];  // session: [{name,presetId|null}]
+let log         = [];  // newest first
+let nextLogId   = 1;
+
+// Modal state
+let lmTab       = 'normal';   // log modal dmg tab
+let aeTab       = 'normal';   // ability editor dmg tab
+let lmMode      = 'add';      // 'add'|'reuse'|'puse'
+let aeTargetPCId   = null;
+let aeEditAbId     = null;
+let ppCharIdx      = null;    // which char's panel is open
+let alertForceFn   = null;
+
+// ══════════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════════
+function updateCharInputs(){
+  const n=Math.max(1,parseInt(document.getElementById('char-count').value)||1);
+  const container=document.getElementById('char-inputs');
+  const existing=[...container.querySelectorAll('input')].map(i=>i.value);
+  container.innerHTML='';
+  for(let i=0;i<n;i++){
+    const inp=document.createElement('input');
+    inp.type='text';inp.placeholder='Name or #ID to load preset';
+    inp.dataset.idx=i;inp.value=existing[i]||'';
+    container.appendChild(inp);
+  }
+}
+
+function startApp(){
+  const inputs=document.querySelectorAll('#char-inputs input');
+  characters=[];
+  inputs.forEach((inp,i)=>{
+    const val=inp.value.trim();
+    if(!val){characters.push({name:'Character '+(i+1),presetId:null});return;}
+    const m=val.match(/^#(\d+)$/i);
+    if(m){
+      const pid=parseInt(m[1]);
+      const pc=presetChars.find(c=>c.id===pid);
+      if(pc){characters.push({name:pc.name,presetId:pid});return;}
+    }
+    characters.push({name:val,presetId:null});
+  });
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  populateCharSelect();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// PRESET LIBRARY (setup screen)
+// ══════════════════════════════════════════════
+function addPresetChar(){
+  const idInp=document.getElementById('new-pc-id');
+  const nameInp=document.getElementById('new-pc-name');
+  const rawId=idInp.value.trim().replace(/^#/,'');
+  const name=nameInp.value.trim();
+  if(!rawId){alert('Please enter an ID for this character.');return;}
+  if(!name){alert('Please enter a name for this character.');return;}
+  const pid=parseInt(rawId);
+  if(isNaN(pid)||pid<=0){alert('ID must be a positive number.');return;}
+  if(presetChars.find(c=>c.id===pid)){alert(`ID #${pid} is already taken. Choose a different one.`);return;}
+  presetChars.push({id:pid,name,abilities:[]});
+  savePresets();idInp.value='';nameInp.value='';renderLibrary();
+}
+
+function deletePresetChar(pid){
+  showCF('DELETE CHARACTER','This will permanently delete this preset character and all their saved abilities.',()=>{
+    presetChars=presetChars.filter(c=>c.id!==pid);
+    savePresets();renderLibrary();
+  });
+}
+
+function startRenamePC(pid){
+  const card=document.getElementById('pc-'+pid);
+  card.querySelector('.pc-name-static').style.display='none';
+  const ei=card.querySelector('.pc-name-edit');
+  ei.classList.add('open');ei.focus();ei.select();
+}
+
+function saveRenamePC(pid){
+  const card=document.getElementById('pc-'+pid);
+  const val=card.querySelector('.pc-name-edit').value.trim();
+  if(val){const pc=presetChars.find(c=>c.id===pid);if(pc)pc.name=val;savePresets();}
+  renderLibrary();
+}
+
+function renderLibrary(){
+  const list=document.getElementById('pc-list');
+  if(presetChars.length===0){
+    list.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:12px">// no preset characters yet</div>';
+    return;
+  }
+  list.innerHTML='';
+  presetChars.forEach(pc=>{
+    const card=document.createElement('div');
+    card.className='pc-card';card.id='pc-'+pc.id;
+
+    const abRows=pc.abilities.length>0
+      ? pc.abilities.map(ab=>{
+          const td=abTotalDmg(ab);
+          const tt=ab.dmgType!=='normal'?` <span style="color:${ab.dmgType==='dot'?'#8e44ad':'#e67e22'}">[${ab.dmgType.toUpperCase()}]</span>`:'';
+          return `<div class="pc-ab-row">
+            <div class="pc-ab-info">
+              <span class="abn">${ab.name}</span>${tt}
+              <span>DMG ${td} · CAST ${ab.castTime}s · CD ${ab.cooldown}s${ab.effectName?' · ⬡ '+ab.effectName:''}</span>
+              ${ab.desc?`<span style="font-style:italic;font-size:10px">${ab.desc}</span>`:''}
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <button class="btn btn-ghost btn-xs" onclick="openAeModal(${pc.id},${ab.id})">EDIT</button>
+              <button class="btn btn-danger btn-xs" onclick="deletePresetAbility(${pc.id},${ab.id})">DEL</button>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div class="pc-no-ab">no abilities saved yet</div>';
+
+    card.innerHTML=`
+      <div class="pc-head">
+        <div class="pc-meta">
+          <div class="pc-id">#${pc.id}</div>
+          <div class="pc-name-static">${pc.name}</div>
+          <input class="pc-name-edit" type="text" value="${pc.name}"
+            onblur="saveRenamePC(${pc.id})"
+            onkeydown="if(event.key==='Enter')saveRenamePC(${pc.id})">
+        </div>
+        <div class="pc-actions">
+          <button class="btn btn-ghost btn-xs" onclick="startRenamePC(${pc.id})">RENAME</button>
+          <button class="btn btn-secondary btn-xs" onclick="openAeModal(${pc.id},null)">+ ABILITY</button>
+          <button class="btn btn-danger btn-xs" onclick="deletePresetChar(${pc.id})">DELETE</button>
+        </div>
+      </div>
+      <div class="pc-ab-list">${abRows}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════
+// ABILITY EDITOR (setup screen modal)
+// ══════════════════════════════════════════════
+function openAeModal(pcId,abId){
+  aeTargetPCId=pcId;aeEditAbId=abId;
+  clearAeFields();setTab('ae','normal');
+  if(abId!==null){
+    const pc=presetChars.find(c=>c.id===pcId);
+    const ab=pc&&pc.abilities.find(a=>a.id===abId);
+    if(ab){
+      document.getElementById('ae-title').textContent='EDIT ABILITY';
+      document.getElementById('ae-name').value=ab.name;
+      document.getElementById('ae-desc').value=ab.desc||'';
+      document.getElementById('ae-cast').value=ab.castTime;
+      document.getElementById('ae-cd').value=ab.cooldown;
+      setTab('ae',ab.dmgType||'normal');
+      if(ab.dmgType==='normal')  document.getElementById('ae-dmg-n').value=ab.dmg;
+      if(ab.dmgType==='delayed'){document.getElementById('ae-dmg-d').value=ab.dmg;document.getElementById('ae-delay').value=ab.delay||0;}
+      if(ab.dmgType==='dot')    {document.getElementById('ae-dmg-t').value=ab.dmg;document.getElementById('ae-tick-i').value=ab.dotInterval||0;document.getElementById('ae-tick-d').value=ab.dotDuration||0;updateDotPrev('ae');}
+      document.getElementById('ae-eff-n').value=ab.effectName||'';
+      document.getElementById('ae-eff-d').value=ab.effectDuration||'';
+      document.getElementById('ae-stacks').checked=ab.stacks||false;
+    }
+  } else {
+    document.getElementById('ae-title').textContent='ADD ABILITY';
+  }
+  document.getElementById('ae-modal').classList.add('open');
+}
+
+function closeAeModal(){document.getElementById('ae-modal').classList.remove('open');}
+
+function clearAeFields(){
+  ['ae-name','ae-desc','ae-eff-n'].forEach(id=>document.getElementById(id).value='');
+  ['ae-dmg-n','ae-dmg-d','ae-dmg-t','ae-cast','ae-cd','ae-delay','ae-tick-i','ae-tick-d','ae-eff-d'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ae-stacks').checked=false;
+  document.getElementById('ae-dot-prev').textContent='';
+}
+
+function confirmAbilityEditor(){
+  const name=document.getElementById('ae-name').value.trim();
+  if(!name){alert('Ability name is required.');return;}
+  const desc=document.getElementById('ae-desc').value.trim();
+  const castTime=parseFloat(document.getElementById('ae-cast').value)||0;
+  const cooldown=parseFloat(document.getElementById('ae-cd').value)||0;
+  const effName=document.getElementById('ae-eff-n').value.trim();
+  const effDur=parseFloat(document.getElementById('ae-eff-d').value)||0;
+  const stacks=document.getElementById('ae-stacks').checked;
+  let dmg=0,delay=0,dotInterval=0,dotDuration=0;
+  const dmgType=aeTab;
+  if(dmgType==='normal')  dmg=parseFloat(document.getElementById('ae-dmg-n').value)||0;
+  if(dmgType==='delayed'){dmg=parseFloat(document.getElementById('ae-dmg-d').value)||0;delay=parseFloat(document.getElementById('ae-delay').value)||0;}
+  if(dmgType==='dot')    {dmg=parseFloat(document.getElementById('ae-dmg-t').value)||0;dotInterval=parseFloat(document.getElementById('ae-tick-i').value)||0;dotDuration=parseFloat(document.getElementById('ae-tick-d').value)||0;if(dotInterval<=0){alert('DoT interval must be > 0.');return;}}
+  const pc=presetChars.find(c=>c.id===aeTargetPCId);
+  if(!pc)return;
+  if(aeEditAbId!==null){
+    const ab=pc.abilities.find(a=>a.id===aeEditAbId);
+    if(ab)Object.assign(ab,{name,desc,castTime,cooldown,dmgType,dmg,delay,dotInterval,dotDuration,effectName:effName,effectDuration:effDur,stacks});
+  } else {
+    pc.abilities.push({id:nextAbId++,name,desc,castTime,cooldown,dmgType,dmg,delay,dotInterval,dotDuration,effectName:effName,effectDuration:effDur,stacks});
+  }
+  savePresets();closeAeModal();renderLibrary();
+}
+
+function deletePresetAbility(pcId,abId){
+  showCF('DELETE ABILITY','Remove this ability from the preset character?',()=>{
+    const pc=presetChars.find(c=>c.id===pcId);
+    if(pc)pc.abilities=pc.abilities.filter(a=>a.id!==abId);
+    savePresets();renderLibrary();
+  });
+}
+
+// ══════════════════════════════════════════════
+// DMG TAB HELPER
+// ══════════════════════════════════════════════
+function setTab(scope,type){
+  if(scope==='lm')lmTab=type; else aeTab=type;
+  const tabsEl=document.getElementById(scope+'-tabs');
+  tabsEl.querySelectorAll('.dt').forEach(t=>t.classList.toggle('active',t.dataset.t===type));
+  ['normal','delayed','dot'].forEach(t=>{
+    const el=document.getElementById(scope+'-dtf-'+t);
+    if(el)el.classList.toggle('active',t===type);
+  });
+}
+
+function updateDotPrev(scope){
+  const pfx=scope==='lm'?'lm':'ae';
+  const dmgPer=parseFloat(document.getElementById(pfx+'-dmg-t').value)||0;
+  const iv=parseFloat(document.getElementById(pfx+'-tick-i').value)||0;
+  const dur=parseFloat(document.getElementById(pfx+'-tick-d').value)||0;
+  const el=document.getElementById(pfx+'-dot-prev');
+  if(iv>0&&dur>0){const t=Math.floor(dur/iv);el.textContent=`${t} tick${t!==1?'s':''} = ${t*dmgPer} total dmg`;}
+  else el.textContent='';
+}
+
+// ══════════════════════════════════════════════
+// SESSION: populate char select
+// ══════════════════════════════════════════════
+function populateCharSelect(){
+  const sel=document.getElementById('lm-char');
+  sel.innerHTML='';
+  characters.forEach((c,i)=>{
+    const opt=document.createElement('option');
+    opt.value=i;
+    opt.textContent=c.presetId?`${c.name} [#${c.presetId}]`:c.name;
+    sel.appendChild(opt);
+  });
+}
+
+// ══════════════════════════════════════════════
+// LOG MODAL
+// ══════════════════════════════════════════════
+function openAddModal(){
+  lmMode='add';
+  document.getElementById('lm-title').textContent='LOG ABILITY';
+  document.getElementById('lm-ok').textContent='CONFIRM';
+  clearLMFields();setTab('lm','normal');
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function openReuseModal(logId){
+  const entry=log.find(e=>e.id===logId);if(!entry)return;
+  const cdRem=getCDRemaining(entry);
+  if(cdRem>0){
+    showAlert(`${entry.name} still has ${cdRem.toFixed(2)}s on cooldown.\n\nUse regardless?`,()=>_fillAndOpenLM('reuse',entry,characters.findIndex(c=>c.name===entry.char)));
+  } else {
+    _fillAndOpenLM('reuse',entry,characters.findIndex(c=>c.name===entry.char));
+  }
+}
+
+function openPresetUseModal(ab,charIdx){
+  // Check cooldown using log history
+  const charName=characters[charIdx]&&characters[charIdx].name;
+  const cdRem=getPresetCDRemaining(ab,charName);
+  if(cdRem>0){
+    showAlert(`${ab.name} still has ${cdRem.toFixed(2)}s on cooldown.\n\nUse regardless?`,()=>_fillAndOpenLM('puse',ab,charIdx));
+  } else {
+    _fillAndOpenLM('puse',ab,charIdx);
+  }
+}
+
+function _fillAndOpenLM(mode,src,charIdx){
+  lmMode=mode;
+  document.getElementById('lm-title').textContent=mode==='reuse'?'REUSE ABILITY':'USE ABILITY';
+  document.getElementById('lm-ok').textContent='LOG';
+  clearLMFields();
+  if(charIdx>=0)document.getElementById('lm-char').value=charIdx;
+  document.getElementById('lm-name').value=src.name;
+  document.getElementById('lm-desc').value=src.desc||'';
+  document.getElementById('lm-cast').value=src.castTime;
+  document.getElementById('lm-cd').value=src.cooldown;
+  setTab('lm',src.dmgType||'normal');
+  if(src.dmgType==='normal')  document.getElementById('lm-dmg-n').value=src.dmg;
+  if(src.dmgType==='delayed'){document.getElementById('lm-dmg-d').value=src.dmg;document.getElementById('lm-delay').value=src.delay||0;}
+  if(src.dmgType==='dot')    {document.getElementById('lm-dmg-t').value=src.dmg;document.getElementById('lm-tick-i').value=src.dotInterval||0;document.getElementById('lm-tick-d').value=src.dotDuration||0;updateDotPrev('lm');}
+  document.getElementById('lm-eff-n').value=src.effectName||'';
+  document.getElementById('lm-eff-d').value=src.effectDuration||'';
+  document.getElementById('lm-stacks').checked=src.stacks||false;
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function closeLogModal(){document.getElementById('log-modal').classList.remove('open');}
+
+function clearLMFields(){
+  ['lm-name','lm-desc','lm-eff-n'].forEach(id=>document.getElementById(id).value='');
+  ['lm-dmg-n','lm-dmg-d','lm-dmg-t','lm-cast','lm-cd','lm-delay','lm-tick-i','lm-tick-d','lm-eff-d'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lm-stacks').checked=false;
+  document.getElementById('lm-dot-prev').textContent='';
+}
+
+function confirmLogModal(){
+  const charIdx=parseInt(document.getElementById('lm-char').value);
+  const name=document.getElementById('lm-name').value.trim();
+  if(!name){alert('Ability name is required.');return;}
+  const desc=document.getElementById('lm-desc').value.trim();
+  const castTime=parseFloat(document.getElementById('lm-cast').value)||0;
+  const cooldown=parseFloat(document.getElementById('lm-cd').value)||0;
+  const effName=document.getElementById('lm-eff-n').value.trim();
+  const effDur=parseFloat(document.getElementById('lm-eff-d').value)||0;
+  const stacks=document.getElementById('lm-stacks').checked;
+  let dmg=0,delay=0,dotInterval=0,dotDuration=0;
+  const dmgType=lmTab;
+  if(dmgType==='normal')  dmg=parseFloat(document.getElementById('lm-dmg-n').value)||0;
+  if(dmgType==='delayed'){dmg=parseFloat(document.getElementById('lm-dmg-d').value)||0;delay=parseFloat(document.getElementById('lm-delay').value)||0;}
+  if(dmgType==='dot')    {dmg=parseFloat(document.getElementById('lm-dmg-t').value)||0;dotInterval=parseFloat(document.getElementById('lm-tick-i').value)||0;dotDuration=parseFloat(document.getElementById('lm-tick-d').value)||0;if(dotInterval<=0){alert('DoT interval must be > 0.');return;}}
+  const charObj=characters[charIdx]||characters[0];
+  log.unshift({id:nextLogId++,char:charObj.name,name,desc,castTime,cooldown,dmgType,dmg,delay,dotInterval,dotDuration,effectName:effName,effectDuration:effDur,stacks,timeAt:0});
+  recalc();
+  closeLogModal();
+  closePP();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// PRESET PANEL (in-app)
+// ══════════════════════════════════════════════
+function openPP(charIdx){
+  const charObj=characters[charIdx];
+  if(!charObj||charObj.presetId===null)return;
+  const pc=presetChars.find(c=>c.id===charObj.presetId);
+  if(!pc)return;
+  ppCharIdx=charIdx;
+  document.getElementById('pp-title').textContent=pc.name.toUpperCase()+' — ABILITIES';
+  const listEl=document.getElementById('pp-list');
+  listEl.innerHTML='';
+  if(pc.abilities.length===0){
+    listEl.innerHTML='<div class="pp-no-ab">No abilities saved for this character.</div>';
+  } else {
+    pc.abilities.forEach(ab=>{
+      const td=abTotalDmg(ab);
+      const cdRem=getPresetCDRemaining(ab,charObj.name);
+      const cdReady=cdRem<=0;
+      let typeInfo='';
+      if(ab.dmgType==='delayed')typeInfo=`<span style="color:#e67e22"> DELAYED +${ab.delay}s</span>`;
+      if(ab.dmgType==='dot'){const t=ab.dotInterval>0?Math.floor(ab.dotDuration/ab.dotInterval):0;typeInfo=`<span style="color:#8e44ad"> DOT ×${t}</span>`;}
+      const row=document.createElement('div');
+      row.className='pp-row';
+      // Encode ability as JSON attr safely
+      const abEnc=encodeURIComponent(JSON.stringify(ab));
+      row.innerHTML=`
+        <div class="pp-info">
+          <div class="pp-abn">${ab.name}${typeInfo}</div>
+          <div class="pp-meta">DMG <span>${td}</span> · CAST <span>${ab.castTime}s</span> · CD <span>${ab.cooldown}s</span>${ab.effectName?` · ⬡ <span>${ab.effectName}</span>`:''}</div>
+          ${ab.desc?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted);font-style:italic">${ab.desc}</div>`:''}
+        </div>
+        <div class="pp-right">
+          <div class="cdb ${cdReady?'rdy':'cool'}">${cdReady?'CD READY':'CD '+cdRem.toFixed(2)+'s'}</div>
+          <button class="btn btn-secondary btn-xs" onclick="usePPAbility('${abEnc}',${charIdx})">USE</button>
+        </div>
+      `;
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById('pp').classList.add('open');
+}
+
+function usePPAbility(abEnc,charIdx){
+  const ab=JSON.parse(decodeURIComponent(abEnc));
+  openPresetUseModal(ab,charIdx);
+}
+
+function closePP(){document.getElementById('pp').classList.remove('open');}
+
+function getPresetCDRemaining(ab,charName){
+  const recent=log.find(e=>e.char===charName&&e.name===ab.name);
+  if(!recent)return 0;
+  return getCDRemaining(recent);
+}
+
+// ══════════════════════════════════════════════
+// RECALC / HELPERS
+// ══════════════════════════════════════════════
+function recalc(){
+  let cum=0;
+  for(let i=log.length-1;i>=0;i--){cum+=log[i].castTime;log[i].timeAt=parseFloat(cum.toFixed(4));}
+}
+function totalTime(){return log.length>0?log[0].timeAt:0;}
+function logEntryDmg(e){
+  if(e.dmgType==='dot'){if(!e.dotInterval||e.dotInterval<=0)return 0;return Math.floor(e.dotDuration/e.dotInterval)*e.dmg;}
+  return e.dmg;
+}
+function abTotalDmg(ab){
+  if(ab.dmgType==='dot'){if(!ab.dotInterval||ab.dotInterval<=0)return 0;return Math.floor(ab.dotDuration/ab.dotInterval)*ab.dmg;}
+  return ab.dmg;
+}
+function getCDRemaining(entry){
+  const castStart=entry.timeAt-entry.castTime;
+  return Math.max(0,parseFloat((castStart+entry.cooldown-totalTime()).toFixed(4)));
+}
+
+// ══════════════════════════════════════════════
+// EDIT / DELETE LOG
+// ══════════════════════════════════════════════
+function toggleEdit(lid){
+  const el=document.getElementById('le-'+lid);if(!el)return;
+  el.querySelector('.ef').classList.toggle('open');
+  el.classList.toggle('editing');
+}
+function saveEdit(lid){
+  const entry=log.find(e=>e.id===lid);if(!entry)return;
+  const el=document.getElementById('le-'+lid);
+  const ci=parseInt(el.querySelector('.e-char').value);
+  entry.char=(characters[ci]||characters[0]).name;
+  entry.name=el.querySelector('.e-name').value.trim()||entry.name;
+  entry.desc=el.querySelector('.e-desc').value.trim();
+  entry.castTime=parseFloat(el.querySelector('.e-cast').value)||0;
+  entry.cooldown=parseFloat(el.querySelector('.e-cd').value)||0;
+  entry.dmgType=el.querySelector('.e-dmt').value;
+  entry.dmg=parseFloat(el.querySelector('.e-dmg').value)||0;
+  entry.delay=parseFloat(el.querySelector('.e-delay').value)||0;
+  entry.dotInterval=parseFloat(el.querySelector('.e-doti').value)||0;
+  entry.dotDuration=parseFloat(el.querySelector('.e-dotd').value)||0;
+  entry.effectName=el.querySelector('.e-effn').value.trim();
+  entry.effectDuration=parseFloat(el.querySelector('.e-effd').value)||0;
+  entry.stacks=el.querySelector('.e-stacks').checked;
+  recalc();renderAll();
+}
+function deleteEntry(lid){
+  const idx=log.findIndex(e=>e.id===lid);if(idx===-1)return;
+  log.splice(idx,1);recalc();renderAll();
+}
+
+// ══════════════════════════════════════════════
+// EFFECTS
+// ══════════════════════════════════════════════
+function getActiveEffects(){
+  const tt=totalTime();const map={};
+  for(let i=log.length-1;i>=0;i--){
+    const e=log[i];if(!e.effectName||e.effectDuration<=0)continue;
+    const end=(e.timeAt-e.castTime)+e.effectDuration;
+    if(!map[e.effectName])map[e.effectName]={stacks:e.stacks,endTimes:[]};
+    if(e.stacks)map[e.effectName].endTimes.push(end);
+    else map[e.effectName].endTimes=[end];
+  }
+  const active=[];
+  for(const[name,d]of Object.entries(map)){
+    const live=d.endTimes.filter(t=>t>tt);
+    if(live.length>0)active.push({name,stacks:live.length,remaining:Math.max(...live)-tt});
+  }
+  return active;
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function renderAll(){renderLog();renderStats();renderEffects();}
+
+function renderLog(){
+  const area=document.getElementById('log-area');
+  if(log.length===0){area.innerHTML='<div class="empty-log">// no abilities logged yet</div>';return;}
+  area.innerHTML='';
+  log.forEach(entry=>{
+    const cdRem=getCDRemaining(entry);
+    const cdReady=cdRem<=0;
+    const td=logEntryDmg(entry);
+    const charOpts=characters.map((c,i)=>`<option value="${i}" ${c.name===entry.char?'selected':''}>${c.presetId?c.name+' [#'+c.presetId+']':c.name}</option>`).join('');
+    const dmtOpts=['normal','delayed','dot'].map(t=>`<option value="${t}" ${entry.dmgType===t?'selected':''}>${t.toUpperCase()}</option>`).join('');
+    let dmtLabel='';
+    if(entry.dmgType==='delayed')dmtLabel=`<div class="le-dmt dmt-del">⏱ DELAYED +${entry.delay}s → ${entry.dmg} dmg</div>`;
+    if(entry.dmgType==='dot'){const t=entry.dotInterval>0?Math.floor(entry.dotDuration/entry.dotInterval):0;dmtLabel=`<div class="le-dmt dmt-dot">◈ DOT ${entry.dmg}/tick every ${entry.dotInterval}s for ${entry.dotDuration}s (${t} ticks = ${td} total)</div>`;}
+    const el=document.createElement('div');
+    el.className='le';el.id='le-'+entry.id;
+    el.innerHTML=`
+      <div class="le-head">
+        <div class="le-left">
+          <div class="le-char">${entry.char}</div>
+          <div class="le-name">${entry.name}</div>
+        </div>
+        <div class="cdb ${cdReady?'rdy':'cool'}">${cdReady?'CD READY':'CD '+cdRem.toFixed(2)+'s'}</div>
+      </div>
+      <div class="le-meta">
+        <div class="mp dmg">DMG <span>${td}</span></div>
+        <div class="mp">CAST <span>${entry.castTime}s</span></div>
+        <div class="mp">CD <span>${entry.cooldown}s</span></div>
+        <div class="mp">@ <span>${entry.timeAt.toFixed(2)}s</span></div>
+      </div>
+      ${entry.desc?`<div class="le-desc">${entry.desc}</div>`:''}
+      ${dmtLabel}
+      ${entry.effectName?`<div class="le-eff">⬡ ${entry.effectName}${entry.effectDuration>0?' — '+entry.effectDuration+'s':''}${entry.stacks?' [STACKS]':' [REFRESH]'}</div>`:''}
+      <div class="le-acts">
+        <button class="btn btn-secondary btn-xs" onclick="openReuseModal(${entry.id})">USE AGAIN</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">EDIT</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteEntry(${entry.id})">DELETE</button>
+      </div>
+      <div class="ef">
+        <div class="eg">
+          <div class="full"><label>Character</label><select class="e-char">${charOpts}</select></div>
+          <div class="full"><label>Ability Name</label><input type="text" class="e-name" value="${entry.name}"></div>
+          <div class="full"><label>Description</label><textarea class="e-desc">${entry.desc||''}</textarea></div>
+          <div><label>Cast Time (s)</label><input type="number" class="e-cast" value="${entry.castTime}" step="0.1"></div>
+          <div><label>Cooldown (s)</label><input type="number" class="e-cd" value="${entry.cooldown}" step="0.1"></div>
+          <div class="full"><label>Damage Type</label><select class="e-dmt">${dmtOpts}</select></div>
+          <div><label>Damage / per tick</label><input type="number" class="e-dmg" value="${entry.dmg}"></div>
+          <div><label>Delay (s) — delayed</label><input type="number" class="e-delay" value="${entry.delay||0}" step="0.1"></div>
+          <div><label>DoT Interval (s)</label><input type="number" class="e-doti" value="${entry.dotInterval||0}" step="0.1"></div>
+          <div><label>DoT Duration (s)</label><input type="number" class="e-dotd" value="${entry.dotDuration||0}" step="0.1"></div>
+          <div><label>Effect Name</label><input type="text" class="e-effn" value="${entry.effectName||''}"></div>
+          <div><label>Effect Duration (s)</label><input type="number" class="e-effd" value="${entry.effectDuration||0}" step="0.1"></div>
+          <div class="full"><div class="cb-row"><input type="checkbox" class="e-stacks" ${entry.stacks?'checked':''}><label>Effect stacks</label></div></div>
+        </div>
+        <div class="ea">
+          <button class="btn btn-green btn-xs" onclick="saveEdit(${entry.id})">SAVE</button>
+          <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">CANCEL</button>
+        </div>
+      </div>
+    `;
+    area.appendChild(el);
+  });
+}
+
+function renderStats(){
+  const tt=totalTime();
+  const totalDmg=log.reduce((s,e)=>s+logEntryDmg(e),0);
+  const dps=tt>0?totalDmg/tt:0;
+  document.getElementById('s-time').textContent=tt.toFixed(2)+'s';
+  document.getElementById('s-dmg').textContent=totalDmg;
+  document.getElementById('s-dps').textContent=dps.toFixed(2);
+  const grid=document.getElementById('csg');grid.innerHTML='';
+  characters.forEach((charObj,idx)=>{
+    const entries=log.filter(e=>e.char===charObj.name);
+    const cDmg=entries.reduce((s,e)=>s+logEntryDmg(e),0);
+    const cCast=entries.reduce((s,e)=>s+e.castTime,0);
+    const pct=totalDmg>0?((cDmg/totalDmg)*100).toFixed(1):'0.0';
+    const cdps=cCast>0?(cDmg/cCast).toFixed(2):'0.00';
+    const isP=charObj.presetId!==null;
+    const card=document.createElement('div');
+    card.className='csc'+(isP?' preset':'');
+    if(isP)card.onclick=()=>openPP(idx);
+    card.innerHTML=`
+      <div class="cn">${charObj.name}${isP?`<span class="pbadge">#${charObj.presetId}</span>`:''}</div>
+      <div class="cr"><span>DMG</span><strong>${cDmg}</strong></div>
+      <div class="cr"><span>%TEAM</span><strong>${pct}%</strong></div>
+      <div class="cr"><span>CAST</span><strong>${cCast.toFixed(2)}s</strong></div>
+      <div class="cr"><span>DPS</span><strong>${cdps}</strong></div>
+      ${isP?'<div class="tap-hint">TAP FOR ABILITIES</div>':''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderEffects(){
+  const active=getActiveEffects();
+  const el=document.getElementById('eff-list');
+  if(active.length===0){el.innerHTML='<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>';return;}
+  el.innerHTML=active.map(eff=>`<span class="eff-chip">${eff.name} <span class="stk">${eff.stacks>1?'×'+eff.stacks+' ':''}${eff.remaining.toFixed(1)}s</span></span>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// ALERT / CONFIRM / RESET MODALS
+// ══════════════════════════════════════════════
+function showAlert(msg,onForce){
+  document.getElementById('alert-msg').textContent=msg;
+  document.getElementById('alert-modal').classList.add('open');
+  document.getElementById('alert-force').onclick=()=>{closeAlert();if(onForce)onForce();};
+}
+function closeAlert(){document.getElementById('alert-modal').classList.remove('open');}
+
+function showCF(title,msg,onOk){
+  document.getElementById('cf-title').textContent=title;
+  document.getElementById('cf-msg').textContent=msg;
+  document.getElementById('cf-modal').classList.add('open');
+  document.getElementById('cf-ok').onclick=()=>{closeCF();if(onOk)onOk();};
+}
+function closeCF(){document.getElementById('cf-modal').classList.remove('open');}
+
+function openResetModal(){document.getElementById('reset-modal').classList.add('open');}
+function closeResetModal(){document.getElementById('reset-modal').classList.remove('open');}
+function doReset(){log=[];nextLogId=1;closeResetModal();renderAll();}
+function goToSetup(){
+  log=[];nextLogId=1;characters=[];
+  closeResetModal();
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  renderLibrary();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.getElementById('lm-dmg-t').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('lm-tick-i').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('lm-tick-d').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('ae-dmg-t').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('ae-tick-i').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('ae-tick-d').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('new-pc-name').addEventListener('keydown',e=>{if(e.key==='Enter')addPresetChar();});
+document.getElementById('new-pc-id').addEventListener('keydown',e=>{if(e.key==='Enter')addPresetChar();});
+renderLibrary();
+</script>
+</body>
+</html>
