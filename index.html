@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMG CALC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --yellow: #f5c400;
+    --yellow-dim: #b38f00;
+    --yellow-bg: rgba(245,196,0,0.06);
+    --red: #c0392b;
+    --green: #27ae60;
+    --blue: #2980b9;
+    --text: #e8e8e8;
+    --muted: #666;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Rajdhani', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; min-height: 100vh; }
+
+  /* ── SETUP ── */
+  #setup-screen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 40px 20px;
+  }
+  .setup-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--yellow); padding: 36px 40px;
+    width: 100%; max-width: 480px;
+  }
+  .setup-box h1 {
+    font-family: var(--mono); font-size: 22px; color: var(--yellow);
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .setup-box .sub {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 2px; margin-bottom: 32px;
+  }
+  .field-row { margin-bottom: 18px; }
+  .field-row label {
+    display: block; font-family: var(--mono); font-size: 11px;
+    color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"], textarea, select {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 13px;
+    padding: 8px 12px; width: 100%; outline: none; transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--yellow); }
+  textarea { resize: vertical; min-height: 60px; }
+  select option { background: var(--bg); }
+  .char-inputs { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  #char-count-row { display: flex; align-items: center; gap: 12px; }
+  #char-count-row input { width: 80px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--mono); font-size: 13px; letter-spacing: 2px;
+    text-transform: uppercase; padding: 10px 20px; border: none;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.8; } .btn:active { opacity: 0.6; }
+  .btn-primary   { background: var(--yellow); color: #000; font-weight: bold; }
+  .btn-secondary { background: transparent; color: var(--yellow); border: 1px solid var(--yellow); }
+  .btn-danger    { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-ghost     { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-green     { background: var(--green); color: #fff; font-weight: bold; }
+  .btn-sm  { font-size: 11px; padding: 5px 10px; letter-spacing: 1px; }
+  .btn-xs  { font-size: 10px; padding: 3px 8px;  letter-spacing: 1px; }
+
+  /* ── APP LAYOUT ── */
+  #app-screen { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* Stats bar */
+  #stats-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; flex-shrink: 0;
+  }
+  .stats-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+  }
+  .app-title { font-family: var(--mono); font-size: 13px; color: var(--yellow); letter-spacing: 3px; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 12px;
+  }
+  .stat-cell { background: var(--surface2); padding: 10px 14px; text-align: center; }
+  .stat-cell .lbl { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+  .stat-cell .val { font-family: var(--mono); font-size: 18px; color: var(--yellow); font-weight: bold; }
+  #char-stats-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .char-stat-card { background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; flex: 1; min-width: 120px; }
+  .char-stat-card .cname { font-family: var(--mono); font-size: 10px; color: var(--yellow-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .char-stat-card .crow { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 2px; }
+  .char-stat-card .crow span   { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .char-stat-card .crow strong { font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  /* Effects bar */
+  #effects-bar {
+    background: var(--bg); border-top: 1px solid var(--border);
+    padding: 8px 20px; display: flex; gap: 8px; flex-wrap: wrap;
+    flex-shrink: 0; min-height: 36px; align-items: center;
+  }
+  #effects-bar .effects-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .effect-chip { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border: 1px solid var(--yellow-dim); color: var(--yellow); background: var(--yellow-bg); white-space: nowrap; }
+  .effect-chip .stack { color: var(--muted); font-size: 10px; }
+
+  /* Log area */
+  #log-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+  #log-area::-webkit-scrollbar { width: 4px; }
+  #log-area::-webkit-scrollbar-track { background: var(--bg); }
+  #log-area::-webkit-scrollbar-thumb { background: var(--border); }
+  .empty-log { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; margin-top: 40px; letter-spacing: 2px; }
+
+  /* Log action bar */
+  #log-action-bar {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+
+  /* ── LOG ENTRY ── */
+  .log-entry {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--yellow-dim); padding: 12px 14px;
+  }
+  .log-entry.editing { border-left-color: var(--yellow); background: var(--surface2); }
+  .log-entry-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .log-entry-left { display: flex; flex-direction: column; gap: 2px; }
+  .log-entry-name { font-family: var(--mono); font-size: 14px; color: var(--text); letter-spacing: 1px; }
+  .log-entry-char { font-family: var(--mono); font-size: 10px; color: var(--yellow); letter-spacing: 2px; text-transform: uppercase; }
+  .log-entry-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .meta-pill { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .meta-pill span { color: var(--text); }
+  .meta-pill.dmg span { color: var(--yellow); font-size: 13px; font-weight: bold; }
+  .log-entry-desc { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 6px; font-style: italic; }
+  .log-entry-effect { font-family: var(--mono); font-size: 11px; color: var(--yellow-dim); margin-bottom: 4px; }
+  .log-entry-dmgtype { font-family: var(--mono); font-size: 11px; margin-bottom: 6px; }
+  .dmgtype-delayed { color: #e67e22; }
+  .dmgtype-dot     { color: #8e44ad; }
+  .log-entry-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .cd-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; letter-spacing: 1px; }
+  .cd-badge.ready   { color: var(--green); border: 1px solid var(--green); }
+  .cd-badge.cooling { color: var(--red);   border: 1px solid var(--red);   }
+
+  /* Edit form */
+  .edit-form { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; display: none; }
+  .edit-form.open { display: block; }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .edit-grid .full { grid-column: 1 / -1; }
+  .edit-form label { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .edit-actions { display: flex; gap: 8px; }
+
+  /* Damage type section */
+  .dmg-type-section { margin-bottom: 12px; }
+  .dmg-type-tabs { display: flex; gap: 0; margin-bottom: 12px; }
+  .dmg-tab {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 6px 14px; border: 1px solid var(--border); background: var(--bg);
+    color: var(--muted); cursor: pointer; transition: all 0.15s; flex: 1; text-align: center;
+  }
+  .dmg-tab:not(:last-child) { border-right: none; }
+  .dmg-tab.active { background: var(--yellow-bg); color: var(--yellow); border-color: var(--yellow-dim); }
+  .dmg-type-fields { display: none; }
+  .dmg-type-fields.active { display: block; }
+
+  /* ── MODAL ── */
+  #modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  #modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--yellow); padding: 28px 32px;
+    width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal::-webkit-scrollbar { width: 4px; }
+  .modal::-webkit-scrollbar-track { background: var(--bg); }
+  .modal::-webkit-scrollbar-thumb { background: var(--border); }
+  .modal h2 { font-family: var(--mono); font-size: 14px; color: var(--yellow); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .modal-grid .full { grid-column: 1 / -1; }
+  .modal label { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--yellow); cursor: pointer; }
+  .checkbox-row label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; cursor: pointer; margin: 0; }
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0 12px; }
+  .section-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+
+  /* ── ALERT / CONFIRM MODALS ── */
+  .overlay-modal {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 200; align-items: center; justify-content: center; padding: 20px;
+  }
+  .overlay-modal.open { display: flex; }
+  .alert-box, .reset-box {
+    background: var(--surface); border: 1px solid var(--red);
+    border-top: 3px solid var(--red); padding: 28px 32px; max-width: 380px; width: 100%;
+  }
+  .alert-box h3, .reset-box h3 { font-family: var(--mono); font-size: 13px; color: var(--red); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
+  .alert-box p,  .reset-box p  { font-family: var(--mono); font-size: 12px; color: var(--text); margin-bottom: 20px; line-height: 1.7; }
+  .alert-actions, .reset-actions { display: flex; gap: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ── SETUP ── -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <h1>DMG CALC</h1>
+    <div class="sub">// combat log &amp; damage tracker</div>
+    <div class="field-row">
+      <label>Number of Characters</label>
+      <div id="char-count-row">
+        <input type="number" id="char-count" min="1" max="10" value="1" style="width:80px">
+        <button class="btn btn-secondary btn-sm" onclick="updateCharInputs()">SET</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>Character Names</label>
+      <div class="char-inputs" id="char-inputs">
+        <input type="text" placeholder="Character 1" data-idx="0">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="startApp()">START SESSION</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app-screen">
+  <div id="stats-bar">
+    <div class="stats-top">
+      <div class="app-title">// DMG CALC</div>
+      <button class="btn btn-danger btn-sm" onclick="confirmReset()">RESET</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-cell"><div class="lbl">Total Time</div><div class="val" id="stat-time">0.00s</div></div>
+      <div class="stat-cell"><div class="lbl">Total DMG</div><div class="val" id="stat-dmg">0</div></div>
+      <div class="stat-cell"><div class="lbl">Team DPS</div><div class="val" id="stat-dps">0.00</div></div>
+    </div>
+    <div id="char-stats-grid"></div>
+  </div>
+
+  <div id="effects-bar">
+    <span class="effects-label">ACTIVE EFFECTS:</span>
+    <span id="effects-list" style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>
+  </div>
+
+  <div id="log-area">
+    <div class="empty-log" id="empty-msg">// no abilities logged yet</div>
+  </div>
+
+  <div id="log-action-bar">
+    <button class="btn btn-primary" onclick="openAddModal()">+ LOG ABILITY</button>
+  </div>
+</div>
+
+<!-- ── ADD ABILITY MODAL ── -->
+<div id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">LOG ABILITY</h2>
+
+    <div class="modal-grid">
+      <div class="full">
+        <label>Character</label>
+        <select id="m-char"></select>
+      </div>
+      <div class="full">
+        <label>Ability Name</label>
+        <input type="text" id="m-name" placeholder="e.g. Shot">
+      </div>
+      <div class="full">
+        <label>Description</label>
+        <textarea id="m-desc" placeholder="What does it do?"></textarea>
+      </div>
+      <div>
+        <label>Cast Time (s)</label>
+        <input type="number" id="m-cast" min="0" step="0.1" placeholder="0">
+      </div>
+      <div>
+        <label>Cooldown (s)</label>
+        <input type="number" id="m-cd" min="0" step="0.1" placeholder="0">
+      </div>
+    </div>
+
+    <!-- Damage type -->
+    <hr class="section-divider">
+    <div class="section-label">Damage Type</div>
+    <div class="dmg-type-section">
+      <div class="dmg-type-tabs">
+        <div class="dmg-tab active" data-type="normal"  onclick="setDmgTab('normal')">NORMAL</div>
+        <div class="dmg-tab"        data-type="delayed" onclick="setDmgTab('delayed')">DELAYED</div>
+        <div class="dmg-tab"        data-type="dot"     onclick="setDmgTab('dot')">DOT</div>
+      </div>
+
+      <!-- Normal -->
+      <div class="dmg-type-fields active" id="dtf-normal">
+        <div class="modal-grid">
+          <div>
+            <label>Damage</label>
+            <input type="number" id="m-dmg-normal" min="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Delayed -->
+      <div class="dmg-type-fields" id="dtf-delayed">
+        <div class="modal-grid">
+          <div>
+            <label>Damage</label>
+            <input type="number" id="m-dmg-delayed" min="0" placeholder="0">
+          </div>
+          <div>
+            <label>Delay (s after cast start)</label>
+            <input type="number" id="m-delay" min="0" step="0.1" placeholder="e.g. 3">
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:-4px">
+          DMG hits X seconds after cast begins. Counts to total DMG immediately.
+        </div>
+      </div>
+
+      <!-- DoT -->
+      <div class="dmg-type-fields" id="dtf-dot">
+        <div class="modal-grid">
+          <div>
+            <label>DMG per tick</label>
+            <input type="number" id="m-dmg-dot" min="0" placeholder="0">
+          </div>
+          <div>
+            <label>Tick every (s)</label>
+            <input type="number" id="m-dot-interval" min="0.1" step="0.1" placeholder="e.g. 2">
+          </div>
+          <div>
+            <label>Duration (s)</label>
+            <input type="number" id="m-dot-duration" min="0" step="0.1" placeholder="e.g. 4">
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <div id="dot-preview" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:8px"></div>
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:-4px">
+          Ticks counted from cast start. Total DMG = ticks × dmg per tick.
+        </div>
+      </div>
+    </div>
+
+    <!-- Effect -->
+    <hr class="section-divider">
+    <div class="section-label">Effect (Optional)</div>
+    <div class="modal-grid">
+      <div>
+        <label>Effect Name</label>
+        <input type="text" id="m-eff-name" placeholder="e.g. Bleed">
+      </div>
+      <div>
+        <label>Effect Duration (s)</label>
+        <input type="number" id="m-eff-dur" min="0" step="0.1" placeholder="0">
+      </div>
+      <div class="full">
+        <div class="checkbox-row">
+          <input type="checkbox" id="m-stacks">
+          <label for="m-stacks">Effect stacks on reuse (unchecked = refresh duration)</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="modal-confirm-btn" onclick="confirmModal()">CONFIRM</button>
+      <button class="btn btn-ghost" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ALERT MODAL ── -->
+<div id="alert-modal" class="overlay-modal">
+  <div class="alert-box">
+    <h3>⚠ ABILITY ON COOLDOWN</h3>
+    <p id="alert-msg"></p>
+    <div class="alert-actions">
+      <button class="btn btn-danger btn-sm" id="alert-force-btn">USE REGARDLESS</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAlert()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESET MODAL ── -->
+<div id="reset-modal" class="overlay-modal">
+  <div class="reset-box">
+    <h3>⚠ RESET</h3>
+    <p>Choose an option below. Both actions clear the current log and cannot be undone.</p>
+    <div class="reset-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-danger btn-sm" style="width:100%" onclick="doReset()">CLEAR LOG — keep characters</button>
+      <button class="btn btn-danger btn-sm" style="width:100%;opacity:0.7" onclick="goToSetup()">NEW SESSION — back to character setup</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="closeResetModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let characters = [];
+let log = [];          // newest first (index 0 = most recent)
+let nextId = 1;        // simple integer id, no floats
+let currentDmgTab = 'normal';
+let modalMode = 'add'; // 'add' | 'reuse'
+let reuseSource = null;
+
+/*
+  Entry shape:
+  {
+    id          : integer
+    char        : string
+    name        : string
+    desc        : string
+    castTime    : number
+    cooldown    : number
+    dmgType     : 'normal' | 'delayed' | 'dot'
+    dmg         : number  (normal: flat; delayed: flat; dot: per-tick)
+    delay       : number  (delayed only — seconds after cast start)
+    dotInterval : number  (dot only)
+    dotDuration : number  (dot only)
+    effectName  : string
+    effectDuration: number
+    stacks      : bool
+    timeAt      : number  (cumulative time at END of cast — set by recalc)
+  }
+
+  Computed:
+    totalDmg(entry) = normal→dmg, delayed→dmg, dot→floor(dotDuration/dotInterval)*dmg
+    castStartTime   = timeAt - castTime
+    cdEndTime       = castStartTime + cooldown
+    cdRemaining     = max(0, cdEndTime - totalTime)
+*/
+
+// ─────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────
+function updateCharInputs() {
+  const n = Math.max(1, parseInt(document.getElementById('char-count').value) || 1);
+  const container = document.getElementById('char-inputs');
+  const existing = [...container.querySelectorAll('input')].map(i => i.value);
+  container.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = `Character ${i + 1}`;
+    inp.dataset.idx = i;
+    inp.value = existing[i] || '';
+    container.appendChild(inp);
+  }
+}
+
+function startApp() {
+  const inputs = document.querySelectorAll('#char-inputs input');
+  characters = [];
+  inputs.forEach((inp, i) => {
+    characters.push(inp.value.trim() || `Character ${i + 1}`);
+  });
+  document.getElementById('setup-screen').style.display = 'none';
+  const app = document.getElementById('app-screen');
+  app.style.display = 'flex';
+  populateCharSelect();
+  renderAll();
+}
+
+function populateCharSelect() {
+  const sel = document.getElementById('m-char');
+  sel.innerHTML = '';
+  characters.forEach((c, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+// ─────────────────────────────────────────────
+// DAMAGE TYPE TABS
+// ─────────────────────────────────────────────
+function setDmgTab(type) {
+  currentDmgTab = type;
+  document.querySelectorAll('.dmg-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.type === type);
+  });
+  document.querySelectorAll('.dmg-type-fields').forEach(f => {
+    f.classList.toggle('active', f.id === `dtf-${type}`);
+  });
+}
+
+// Live DoT preview
+document.addEventListener('DOMContentLoaded', () => {
+  ['m-dmg-dot','m-dot-interval','m-dot-duration'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateDotPreview);
+  });
+});
+
+function updateDotPreview() {
+  const dmgPer = parseFloat(document.getElementById('m-dmg-dot').value) || 0;
+  const interval = parseFloat(document.getElementById('m-dot-interval').value) || 0;
+  const dur = parseFloat(document.getElementById('m-dot-duration').value) || 0;
+  const preview = document.getElementById('dot-preview');
+  if (interval > 0 && dur > 0) {
+    const ticks = Math.floor(dur / interval);
+    preview.textContent = `${ticks} tick${ticks !== 1 ? 's' : ''} = ${ticks * dmgPer} total dmg`;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+// ─────────────────────────────────────────────
+// MODAL OPEN / CLOSE
+// ─────────────────────────────────────────────
+function openAddModal() {
+  modalMode = 'add';
+  reuseSource = null;
+  document.getElementById('modal-title').textContent = 'LOG ABILITY';
+  document.getElementById('modal-confirm-btn').textContent = 'CONFIRM';
+  clearModalFields();
+  setDmgTab('normal');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openReuseModal(entryId) {
+  const entry = log.find(e => e.id === entryId);
+  if (!entry) return;
+  const cdRem = getCooldownRemaining(entry);
+
+  if (cdRem > 0) {
+    showAlert(
+      `${entry.name} still has ${cdRem.toFixed(2)}s remaining on cooldown.\n\nUse regardless anyway?`,
+      () => _openReuseForm(entry)
+    );
+  } else {
+    _openReuseForm(entry);
+  }
+}
+
+function _openReuseForm(entry) {
+  modalMode = 'reuse';
+  reuseSource = entry;
+  document.getElementById('modal-title').textContent = 'REUSE ABILITY';
+  document.getElementById('modal-confirm-btn').textContent = 'LOG';
+  clearModalFields();
+
+  // Prefill from entry
+  const charIdx = characters.indexOf(entry.char);
+  document.getElementById('m-char').value = charIdx >= 0 ? charIdx : 0;
+  document.getElementById('m-name').value = entry.name;
+  document.getElementById('m-desc').value = entry.desc;
+  document.getElementById('m-cast').value = entry.castTime;
+  document.getElementById('m-cd').value = entry.cooldown;
+  document.getElementById('m-eff-name').value = entry.effectName || '';
+  document.getElementById('m-eff-dur').value = entry.effectDuration || '';
+  document.getElementById('m-stacks').checked = entry.stacks || false;
+
+  setDmgTab(entry.dmgType || 'normal');
+  if (entry.dmgType === 'normal')  document.getElementById('m-dmg-normal').value = entry.dmg;
+  if (entry.dmgType === 'delayed') {
+    document.getElementById('m-dmg-delayed').value = entry.dmg;
+    document.getElementById('m-delay').value = entry.delay || '';
+  }
+  if (entry.dmgType === 'dot') {
+    document.getElementById('m-dmg-dot').value = entry.dmg;
+    document.getElementById('m-dot-interval').value = entry.dotInterval || '';
+    document.getElementById('m-dot-duration').value = entry.dotDuration || '';
+    updateDotPreview();
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function clearModalFields() {
+  ['m-name','m-desc','m-eff-name'].forEach(id => document.getElementById(id).value = '');
+  ['m-dmg-normal','m-dmg-delayed','m-dmg-dot','m-cast','m-cd',
+   'm-delay','m-dot-interval','m-dot-duration','m-eff-dur'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('m-stacks').checked = false;
+  document.getElementById('dot-preview').textContent = '';
+}
+
+// ─────────────────────────────────────────────
+// CONFIRM / CREATE ENTRY
+// ─────────────────────────────────────────────
+function confirmModal() {
+  const charIdx  = parseInt(document.getElementById('m-char').value);
+  const name     = document.getElementById('m-name').value.trim();
+  const desc     = document.getElementById('m-desc').value.trim();
+  const castTime = parseFloat(document.getElementById('m-cast').value) || 0;
+  const cooldown = parseFloat(document.getElementById('m-cd').value) || 0;
+  const effName  = document.getElementById('m-eff-name').value.trim();
+  const effDur   = parseFloat(document.getElementById('m-eff-dur').value) || 0;
+  const stacks   = document.getElementById('m-stacks').checked;
+
+  if (!name) { alert('Ability name is required.'); return; }
+
+  let dmg = 0, delay = 0, dotInterval = 0, dotDuration = 0;
+  const dmgType = currentDmgTab;
+
+  if (dmgType === 'normal') {
+    dmg = parseFloat(document.getElementById('m-dmg-normal').value) || 0;
+  } else if (dmgType === 'delayed') {
+    dmg   = parseFloat(document.getElementById('m-dmg-delayed').value) || 0;
+    delay = parseFloat(document.getElementById('m-delay').value) || 0;
+  } else if (dmgType === 'dot') {
+    dmg         = parseFloat(document.getElementById('m-dmg-dot').value) || 0;
+    dotInterval = parseFloat(document.getElementById('m-dot-interval').value) || 0;
+    dotDuration = parseFloat(document.getElementById('m-dot-duration').value) || 0;
+    if (dotInterval <= 0) { alert('DoT interval must be greater than 0.'); return; }
+  }
+
+  const entry = {
+    id: nextId++,
+    char: characters[charIdx] || characters[0],
+    name, desc, castTime, cooldown,
+    dmgType, dmg, delay, dotInterval, dotDuration,
+    effectName: effName, effectDuration: effDur, stacks,
+    timeAt: 0
+  };
+
+  log.unshift(entry);
+  recalcTimeAt();
+  closeModal();
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// RECALC
+// ─────────────────────────────────────────────
+// log is newest-first. Cumulative time builds oldest→newest.
+function recalcTimeAt() {
+  let cum = 0;
+  for (let i = log.length - 1; i >= 0; i--) {
+    cum += log[i].castTime;
+    log[i].timeAt = parseFloat(cum.toFixed(4));
+  }
+}
+
+function getTotalTime() {
+  return log.length > 0 ? log[0].timeAt : 0;
+}
+
+function getEntryTotalDmg(entry) {
+  if (entry.dmgType === 'dot') {
+    if (!entry.dotInterval || entry.dotInterval <= 0) return 0;
+    const ticks = Math.floor(entry.dotDuration / entry.dotInterval);
+    return ticks * entry.dmg;
+  }
+  return entry.dmg; // normal & delayed
+}
+
+function getCooldownRemaining(entry) {
+  const castStart = entry.timeAt - entry.castTime;
+  const cdEnd = castStart + entry.cooldown;
+  return Math.max(0, parseFloat((cdEnd - getTotalTime()).toFixed(4)));
+}
+
+// ─────────────────────────────────────────────
+// EDIT / DELETE
+// ─────────────────────────────────────────────
+function toggleEdit(entryId) {
+  const el = document.getElementById('entry-' + entryId);
+  if (!el) return;
+  el.querySelector('.edit-form').classList.toggle('open');
+  el.classList.toggle('editing');
+}
+
+function saveEdit(entryId) {
+  const entry = log.find(e => e.id === entryId);
+  if (!entry) return;
+  const el = document.getElementById('entry-' + entryId);
+
+  const charIdx = parseInt(el.querySelector('.e-char').value);
+  entry.char      = characters[charIdx] || characters[0];
+  entry.name      = el.querySelector('.e-name').value.trim() || entry.name;
+  entry.desc      = el.querySelector('.e-desc').value.trim();
+  entry.castTime  = parseFloat(el.querySelector('.e-cast').value) || 0;
+  entry.cooldown  = parseFloat(el.querySelector('.e-cd').value) || 0;
+
+  // Damage type
+  const newDmgType = el.querySelector('.e-dmgtype').value;
+  entry.dmgType = newDmgType;
+  entry.dmg = parseFloat(el.querySelector('.e-dmg').value) || 0;
+  entry.delay = parseFloat(el.querySelector('.e-delay').value) || 0;
+  entry.dotInterval = parseFloat(el.querySelector('.e-dotinterval').value) || 0;
+  entry.dotDuration = parseFloat(el.querySelector('.e-dotduration').value) || 0;
+
+  entry.effectName     = el.querySelector('.e-effname').value.trim();
+  entry.effectDuration = parseFloat(el.querySelector('.e-effdur').value) || 0;
+  entry.stacks         = el.querySelector('.e-stacks').checked;
+
+  recalcTimeAt();
+  renderAll();
+}
+
+function deleteEntry(entryId) {
+  const idx = log.findIndex(e => e.id === entryId);
+  if (idx === -1) return;
+  log.splice(idx, 1);
+  recalcTimeAt();
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// EFFECTS
+// ─────────────────────────────────────────────
+function getActiveEffects() {
+  const totalTime = getTotalTime();
+  const effectsMap = {};
+
+  // Oldest to newest so stack/refresh order is correct
+  for (let i = log.length - 1; i >= 0; i--) {
+    const entry = log[i];
+    if (!entry.effectName || entry.effectDuration <= 0) continue;
+    const castStart = entry.timeAt - entry.castTime;
+    const effectEnd = castStart + entry.effectDuration;
+
+    if (!effectsMap[entry.effectName]) {
+      effectsMap[entry.effectName] = { stacks: entry.stacks, endTimes: [] };
+    }
+    if (entry.stacks) {
+      effectsMap[entry.effectName].endTimes.push(effectEnd);
+    } else {
+      effectsMap[entry.effectName].endTimes = [effectEnd];
+    }
+  }
+
+  const active = [];
+  for (const [name, data] of Object.entries(effectsMap)) {
+    const live = data.endTimes.filter(t => t > totalTime);
+    if (live.length > 0) {
+      active.push({ name, stacks: live.length, remaining: Math.max(...live) - totalTime });
+    }
+  }
+  return active;
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderAll() {
+  renderLog();
+  renderStats();
+  renderEffects();
+}
+
+function renderLog() {
+  const area = document.getElementById('log-area');
+
+  if (log.length === 0) {
+    area.innerHTML = '<div class="empty-log" id="empty-msg">// no abilities logged yet</div>';
+    return;
+  }
+
+  area.innerHTML = '';
+
+  log.forEach((entry) => {
+    const cdRem   = getCooldownRemaining(entry);
+    const cdReady = cdRem <= 0;
+    const totalDmg = getEntryTotalDmg(entry);
+
+    // Char select for edit form
+    const charOpts = characters.map((c, i) =>
+      `<option value="${i}" ${c === entry.char ? 'selected' : ''}>${c}</option>`
+    ).join('');
+
+    // Damage type display
+    let dmgTypeLabel = '';
+    if (entry.dmgType === 'delayed') {
+      dmgTypeLabel = `<div class="log-entry-dmgtype dmgtype-delayed">⏱ DELAYED +${entry.delay}s → ${entry.dmg} dmg</div>`;
+    } else if (entry.dmgType === 'dot') {
+      const ticks = entry.dotInterval > 0 ? Math.floor(entry.dotDuration / entry.dotInterval) : 0;
+      dmgTypeLabel = `<div class="log-entry-dmgtype dmgtype-dot">◈ DOT ${entry.dmg}/tick every ${entry.dotInterval}s for ${entry.dotDuration}s (${ticks} ticks = ${totalDmg} total)</div>`;
+    }
+
+    // Edit form dmg type options
+    const dmgTypeOpts = ['normal','delayed','dot'].map(t =>
+      `<option value="${t}" ${entry.dmgType === t ? 'selected' : ''}>${t.toUpperCase()}</option>`
+    ).join('');
+
+    const el = document.createElement('div');
+    el.className = 'log-entry';
+    el.id = 'entry-' + entry.id;
+
+    el.innerHTML = `
+      <div class="log-entry-header">
+        <div class="log-entry-left">
+          <div class="log-entry-char">${entry.char}</div>
+          <div class="log-entry-name">${entry.name}</div>
+        </div>
+        <div class="cd-badge ${cdReady ? 'ready' : 'cooling'}">
+          ${cdReady ? 'CD READY' : 'CD ' + cdRem.toFixed(2) + 's'}
+        </div>
+      </div>
+      <div class="log-entry-meta">
+        <div class="meta-pill dmg">DMG <span>${totalDmg}</span></div>
+        <div class="meta-pill">CAST <span>${entry.castTime}s</span></div>
+        <div class="meta-pill">CD <span>${entry.cooldown}s</span></div>
+        <div class="meta-pill">@ <span>${entry.timeAt.toFixed(2)}s</span></div>
+      </div>
+      ${entry.desc ? `<div class="log-entry-desc">${entry.desc}</div>` : ''}
+      ${dmgTypeLabel}
+      ${entry.effectName ? `<div class="log-entry-effect">⬡ ${entry.effectName}${entry.effectDuration > 0 ? ' — ' + entry.effectDuration + 's' : ''}${entry.stacks ? ' [STACKS]' : ' [REFRESH]'}</div>` : ''}
+      <div class="log-entry-actions">
+        <button class="btn btn-secondary btn-xs" onclick="openReuseModal(${entry.id})">USE AGAIN</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">EDIT</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteEntry(${entry.id})">DELETE</button>
+      </div>
+
+      <div class="edit-form">
+        <div class="edit-grid">
+          <div class="full"><label>Character</label><select class="e-char">${charOpts}</select></div>
+          <div class="full"><label>Ability Name</label><input type="text" class="e-name" value="${entry.name}"></div>
+          <div class="full"><label>Description</label><textarea class="e-desc">${entry.desc}</textarea></div>
+          <div><label>Cast Time (s)</label><input type="number" class="e-cast" value="${entry.castTime}" step="0.1"></div>
+          <div><label>Cooldown (s)</label><input type="number" class="e-cd" value="${entry.cooldown}" step="0.1"></div>
+          <div class="full"><label>Damage Type</label><select class="e-dmgtype">${dmgTypeOpts}</select></div>
+          <div><label>Damage (flat / per tick)</label><input type="number" class="e-dmg" value="${entry.dmg}"></div>
+          <div><label>Delay (s) — delayed only</label><input type="number" class="e-delay" value="${entry.delay || 0}" step="0.1"></div>
+          <div><label>DoT Interval (s)</label><input type="number" class="e-dotinterval" value="${entry.dotInterval || 0}" step="0.1"></div>
+          <div><label>DoT Duration (s)</label><input type="number" class="e-dotduration" value="${entry.dotDuration || 0}" step="0.1"></div>
+          <div><label>Effect Name</label><input type="text" class="e-effname" value="${entry.effectName || ''}"></div>
+          <div><label>Effect Duration (s)</label><input type="number" class="e-effdur" value="${entry.effectDuration || 0}" step="0.1"></div>
+          <div class="full">
+            <div class="checkbox-row">
+              <input type="checkbox" class="e-stacks" id="es-${entry.id}" ${entry.stacks ? 'checked' : ''}>
+              <label for="es-${entry.id}">Effect stacks</label>
+            </div>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn btn-green btn-xs" onclick="saveEdit(${entry.id})">SAVE</button>
+          <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">CANCEL</button>
+        </div>
+      </div>
+    `;
+
+    area.appendChild(el);
+  });
+}
+
+function renderStats() {
+  const totalTime = getTotalTime();
+  const totalDmg  = log.reduce((s, e) => s + getEntryTotalDmg(e), 0);
+  const dps       = totalTime > 0 ? totalDmg / totalTime : 0;
+
+  document.getElementById('stat-time').textContent = totalTime.toFixed(2) + 's';
+  document.getElementById('stat-dmg').textContent  = totalDmg;
+  document.getElementById('stat-dps').textContent  = dps.toFixed(2);
+
+  const grid = document.getElementById('char-stats-grid');
+  grid.innerHTML = '';
+
+  characters.forEach(char => {
+    const entries  = log.filter(e => e.char === char);
+    const cDmg     = entries.reduce((s, e) => s + getEntryTotalDmg(e), 0);
+    const cCast    = entries.reduce((s, e) => s + e.castTime, 0);
+    const pct      = totalDmg > 0 ? ((cDmg / totalDmg) * 100).toFixed(1) : '0.0';
+    const cDps     = cCast > 0 ? (cDmg / cCast).toFixed(2) : '0.00';
+
+    const card = document.createElement('div');
+    card.className = 'char-stat-card';
+    card.innerHTML = `
+      <div class="cname">${char}</div>
+      <div class="crow"><span>DMG</span><strong>${cDmg}</strong></div>
+      <div class="crow"><span>%TEAM</span><strong>${pct}%</strong></div>
+      <div class="crow"><span>CAST</span><strong>${cCast.toFixed(2)}s</strong></div>
+      <div class="crow"><span>DPS</span><strong>${cDps}</strong></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderEffects() {
+  const active = getActiveEffects();
+  const container = document.getElementById('effects-list');
+  if (active.length === 0) {
+    container.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>';
+    return;
+  }
+  container.innerHTML = active.map(eff =>
+    `<span class="effect-chip">${eff.name} <span class="stack">${eff.stacks > 1 ? '×' + eff.stacks + ' ' : ''}${eff.remaining.toFixed(1)}s</span></span>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+// ALERT
+// ─────────────────────────────────────────────
+function showAlert(msg, onForce) {
+  document.getElementById('alert-msg').textContent = msg;
+  document.getElementById('alert-modal').classList.add('open');
+  document.getElementById('alert-force-btn').onclick = () => {
+    closeAlert();
+    if (onForce) onForce();
+  };
+}
+function closeAlert() { document.getElementById('alert-modal').classList.remove('open'); }
+
+// ─────────────────────────────────────────────
+// RESET
+// ─────────────────────────────────────────────
+function confirmReset()    { document.getElementById('reset-modal').classList.add('open'); }
+function closeResetModal() { document.getElementById('reset-modal').classList.remove('open'); }
+
+function doReset() {
+  log = [];
+  nextId = 1;
+  closeResetModal();
+  renderAll();
+}
+
+function goToSetup() {
+  log = [];
+  nextId = 1;
+  characters = [];
+  closeResetModal();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
