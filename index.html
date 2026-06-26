@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMG CALC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0d0d0d;--surface:#141414;--surface2:#1a1a1a;--border:#2a2a2a;
+  --yellow:#f5c400;--ydim:#b38f00;--ybg:rgba(245,196,0,0.06);
+  --red:#c0392b;--green:#27ae60;--blue:#2471a3;--text:#e8e8e8;--muted:#666;
+  --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;}
+
+/* ── INPUTS ── */
+input[type="text"],input[type="number"],textarea,select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 12px;width:100%;outline:none;transition:border-color .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--yellow);}
+textarea{resize:vertical;min-height:56px;}
+select option{background:var(--bg);}
+.cb-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.cb-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--yellow);cursor:pointer;}
+.cb-row label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;margin:0;}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;cursor:pointer;transition:opacity .15s;}
+.btn:hover{opacity:.8;}.btn:active{opacity:.6;}
+.btn-primary{background:var(--yellow);color:#000;font-weight:bold;}
+.btn-secondary{background:transparent;color:var(--yellow);border:1px solid var(--yellow);}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-green{background:var(--green);color:#fff;font-weight:bold;}
+.btn-blue{background:transparent;color:#5dade2;border:1px solid #5dade2;}
+.btn-sm{font-size:11px;padding:5px 10px;letter-spacing:1px;}
+.btn-xs{font-size:10px;padding:3px 8px;letter-spacing:1px;}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:40px 20px 60px;gap:20px;}
+.setup-row{display:flex;gap:20px;width:100%;max-width:1160px;flex-wrap:wrap;}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:32px 36px;flex:1;min-width:320px;}
+.battle-setup-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid #5dade2;padding:32px 36px;flex:1;min-width:320px;}
+.setup-box h1,.battle-setup-box h1{font-family:var(--mono);font-size:20px;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;}
+.setup-box h1{color:var(--yellow);}
+.battle-setup-box h1{color:#5dade2;}
+.setup-box .sub,.battle-setup-box .sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:24px;}
+.frow{margin-bottom:16px;}
+.frow>label{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:1px;}
+.char-inputs{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+#cc-row,#bc-char-row,#bc-enemy-row{display:flex;align-items:center;gap:12px;}
+#cc-row input,#bc-char-row input,#bc-enemy-row input{width:80px;}
+.enemy-inputs{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.enemy-row-input{display:flex;gap:8px;}
+.enemy-row-input input:first-child{flex:2;}
+.enemy-row-input input:last-child{flex:1;}
+
+/* ── PRESET LIBRARY ── */
+.lib-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--ydim);padding:24px 32px;width:100%;max-width:1160px;}
+.lib-box h2{font-family:var(--mono);font-size:13px;color:var(--ydim);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
+.lib-add-row{display:flex;gap:8px;margin-bottom:16px;}
+.lib-add-row input{flex:1;}
+.pc-list{display:flex;flex-direction:column;gap:10px;}
+.pc-card{background:var(--bg);border:1px solid var(--border);padding:12px 14px;}
+.pc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.pc-meta{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.pc-id{font-family:var(--mono);font-size:11px;color:var(--ydim);letter-spacing:2px;}
+.pc-name-static{font-family:var(--mono);font-size:14px;color:var(--text);}
+.pc-name-edit{display:none;}.pc-name-edit.open{display:block;}
+.pc-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;}
+.pc-ab-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+.pc-ab-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.pc-ab-info{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:2px;}
+.pc-ab-info .abn{font-family:var(--mono);font-size:12px;color:var(--yellow);}
+.pc-no-ab{font-family:var(--mono);font-size:11px;color:var(--muted);font-style:italic;}
+
+/* ── DMG CALC APP ── */
+#app-screen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+#stats-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;flex-shrink:0;}
+.stats-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.app-title{font-family:var(--mono);font-size:13px;color:var(--yellow);letter-spacing:3px;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:12px;}
+.stat-cell{background:var(--surface2);padding:10px 14px;text-align:center;}
+.stat-cell .lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.stat-cell .val{font-family:var(--mono);font-size:18px;color:var(--yellow);font-weight:bold;}
+#csg{display:flex;gap:8px;flex-wrap:wrap;}
+.csc{background:var(--bg);border:1px solid var(--border);padding:8px 12px;flex:1;min-width:120px;transition:border-color .15s;}
+.csc.preset{cursor:pointer;border-color:var(--ydim);}
+.csc.preset:hover{border-color:var(--yellow);}
+.csc .cn{font-family:var(--mono);font-size:10px;color:var(--ydim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:4px;display:flex;align-items:center;gap:6px;}
+.pbadge{font-family:var(--mono);font-size:9px;color:var(--yellow);border:1px solid var(--ydim);padding:1px 4px;letter-spacing:1px;}
+.csc .cr{display:flex;justify-content:space-between;gap:6px;margin-bottom:2px;}
+.csc .cr span{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.csc .cr strong{font-family:var(--mono);font-size:11px;color:var(--text);}
+.tap-hint{font-family:var(--mono);font-size:9px;color:var(--ydim);margin-top:4px;letter-spacing:1px;}
+#effects-bar{background:var(--bg);border-top:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;min-height:36px;align-items:center;}
+.eff-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.eff-chip{font-family:var(--mono);font-size:11px;padding:3px 8px;border:1px solid var(--ydim);color:var(--yellow);background:var(--ybg);white-space:nowrap;}
+.eff-chip .stk{color:var(--muted);font-size:10px;}
+#log-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
+#log-area::-webkit-scrollbar{width:4px;}
+#log-area::-webkit-scrollbar-track{background:var(--bg);}
+#log-area::-webkit-scrollbar-thumb{background:var(--border);}
+.empty-log{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-top:40px;letter-spacing:2px;}
+#lab{background:var(--surface);border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+/* ── BATTLE SCREEN ── */
+#battle-screen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+#battle-top{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;flex-shrink:0;}
+.battle-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.battle-title{font-family:var(--mono);font-size:13px;color:#5dade2;letter-spacing:3px;}
+.timer-display{font-family:var(--mono);font-size:20px;font-weight:bold;color:var(--yellow);letter-spacing:2px;}
+.timer-display.urgent{color:var(--red);}
+.timer-display.notimer{color:var(--muted);font-size:13px;}
+
+/* Enemy grid */
+#enemy-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;}
+.enemy-card{background:var(--bg);border:1px solid var(--border);padding:8px 12px;flex:1;min-width:110px;transition:border-color .15s;}
+.enemy-card.dead{opacity:.4;border-style:dashed;}
+.enemy-card .en{font-family:var(--mono);font-size:10px;color:#5dade2;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.enemy-card .ehp-text{font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:4px;}
+.hp-bar-wrap{height:6px;background:var(--border);border-radius:0;overflow:hidden;}
+.hp-bar{height:100%;background:var(--green);transition:width .3s;}
+.hp-bar.mid{background:#e67e22;}.hp-bar.low{background:var(--red);}
+.dead-label{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-top:2px;}
+
+/* Battle log area */
+#battle-log-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
+#battle-log-area::-webkit-scrollbar{width:4px;}
+#battle-log-area::-webkit-scrollbar-track{background:var(--bg);}
+#battle-log-area::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* Battle bottom — char stats + button */
+#battle-bottom{background:var(--surface);border-top:1px solid var(--border);padding:12px 20px;flex-shrink:0;}
+#battle-csg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+#battle-lab{display:flex;gap:10px;align-items:center;}
+
+/* ── LOG ENTRY (shared) ── */
+.le{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--ydim);padding:12px 14px;}
+.le.editing{border-left-color:var(--yellow);background:var(--surface2);}
+.le.battle-entry{border-left-color:#5dade2;}
+.le-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.le-left{display:flex;flex-direction:column;gap:2px;}
+.le-name{font-family:var(--mono);font-size:14px;color:var(--text);letter-spacing:1px;}
+.le-char{font-family:var(--mono);font-size:10px;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;}
+.le-target{font-family:var(--mono);font-size:10px;color:#5dade2;letter-spacing:1px;margin-top:1px;}
+.le-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.mp{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.mp span{color:var(--text);}
+.mp.dmg span{color:var(--yellow);font-size:13px;font-weight:bold;}
+.le-desc{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;font-style:italic;}
+.le-eff{font-family:var(--mono);font-size:11px;color:var(--ydim);margin-bottom:4px;}
+.le-dmt{font-family:var(--mono);font-size:11px;margin-bottom:6px;}
+.dmt-del{color:#e67e22;}.dmt-dot{color:#8e44ad;}
+.le-acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.cdb{font-family:var(--mono);font-size:10px;padding:3px 8px;letter-spacing:1px;}
+.cdb.rdy{color:var(--green);border:1px solid var(--green);}
+.cdb.cool{color:var(--red);border:1px solid var(--red);}
+.ef{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:none;}
+.ef.open{display:block;}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.eg .full{grid-column:1/-1;}
+.ef label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.ea{display:flex;gap:8px;}
+
+/* ── DMG TYPE TABS ── */
+.dtt{display:flex;margin-bottom:12px;}
+.dt{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;flex:1;text-align:center;}
+.dt:not(:last-child){border-right:none;}
+.dt.active{background:var(--ybg);color:var(--yellow);border-color:var(--ydim);}
+.dtf{display:none;}.dtf.active{display:block;}
+
+/* ── MODAL OVERLAYS ── */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;padding:20px;}
+.mov.open{display:flex;}
+.mov.z150{z-index:150;}.mov.z200{z-index:200;}.mov.z250{z-index:250;}.mov.z300{z-index:300;}
+.mbox{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:28px 32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.mbox::-webkit-scrollbar{width:4px;}
+.mbox::-webkit-scrollbar-track{background:var(--bg);}
+.mbox::-webkit-scrollbar-thumb{background:var(--border);}
+.mbox h2{font-family:var(--mono);font-size:14px;color:var(--yellow);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.mg .full{grid-column:1/-1;}
+.mbox label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.ma{display:flex;gap:10px;margin-top:20px;}
+.sdiv{border:none;border-top:1px solid var(--border);margin:16px 0 12px;}
+.slbl{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+
+/* Alert/confirm/reset/result boxes */
+.abox,.rbox,.cfbox{background:var(--surface);border:1px solid var(--red);border-top:3px solid var(--red);padding:28px 32px;max-width:400px;width:100%;}
+.abox h3,.rbox h3,.cfbox h3{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;}
+.abox p,.rbox p,.cfbox p{font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:20px;line-height:1.7;white-space:pre-line;}
+.aacts,.racts,.cfacts{display:flex;gap:10px;flex-wrap:wrap;}
+.result-box{background:var(--surface);padding:28px 32px;max-width:380px;width:100%;text-align:center;}
+.result-box.win{border:1px solid var(--green);border-top:3px solid var(--green);}
+.result-box.lose{border:1px solid var(--red);border-top:3px solid var(--red);}
+.result-box h3{font-family:var(--mono);font-size:18px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;}
+.result-box.win h3{color:var(--green);}
+.result-box.lose h3{color:var(--red);}
+.result-box p{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px;line-height:1.8;}
+
+/* Preset panel */
+#pp{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:120;align-items:flex-end;justify-content:center;}
+#pp.open{display:flex;}
+.pp-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--yellow);padding:24px 28px;width:100%;max-width:600px;max-height:72vh;display:flex;flex-direction:column;}
+.pp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0;}
+.pp-head h3{font-family:var(--mono);font-size:13px;color:var(--yellow);letter-spacing:3px;text-transform:uppercase;}
+.pp-list{overflow-y:auto;display:flex;flex-direction:column;gap:8px;flex:1;}
+.pp-list::-webkit-scrollbar{width:4px;}
+.pp-list::-webkit-scrollbar-track{background:var(--bg);}
+.pp-list::-webkit-scrollbar-thumb{background:var(--border);}
+.pp-row{background:var(--bg);border:1px solid var(--border);padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.pp-info{display:flex;flex-direction:column;gap:3px;}
+.pp-abn{font-family:var(--mono);font-size:13px;color:var(--text);}
+.pp-meta{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.pp-meta span{color:var(--text);}
+.pp-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.pp-no-ab{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;padding:20px;font-style:italic;}
+
+/* Target picker */
+#target-modal .mbox{border-top-color:#5dade2;}
+#target-modal h2{color:#5dade2;}
+.target-list{display:flex;flex-direction:column;gap:8px;}
+.target-btn{background:var(--bg);border:1px solid var(--border);padding:12px 16px;cursor:pointer;text-align:left;transition:border-color .15s;width:100%;}
+.target-btn:hover{border-color:#5dade2;}
+.target-btn .tb-name{font-family:var(--mono);font-size:13px;color:var(--text);}
+.target-btn .tb-hp{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Advanced damage */
+#battle-effects-bar{background:var(--bg);border-top:1px solid var(--border);padding:6px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-height:32px;}
+.adv-toggle{font-family:var(--mono);font-size:10px;color:var(--ydim);letter-spacing:2px;cursor:pointer;text-transform:uppercase;margin-bottom:10px;display:inline-flex;align-items:center;gap:6px;border:none;background:none;padding:0;}
+.adv-toggle:hover{color:var(--yellow);}
+.adv-fields{display:none;}.adv-fields.open{display:block;}
+.adv-preview{font-family:var(--mono);font-size:11px;color:var(--yellow);margin-top:4px;min-height:16px;}
+.adv-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ SETUP SCREEN ══════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-row">
+    <!-- DMG CALC box -->
+    <div class="setup-box">
+      <h1>DMG CALC</h1>
+      <div class="sub">// combat log &amp; damage tracker</div>
+      <div class="frow">
+        <label>Number of Characters</label>
+        <div id="cc-row">
+          <input type="number" id="char-count" min="1" max="10" value="1" style="width:80px">
+          <button class="btn btn-secondary btn-sm" onclick="updateCharInputs()">SET</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label>Character Names</label>
+        <div class="char-inputs" id="char-inputs"><input type="text" placeholder="Name or #ID" data-idx="0"></div>
+        <div class="hint">// plain name = regular · #ID = load preset</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="startApp()">START SESSION</button>
+    </div>
+
+    <!-- BATTLE box -->
+    <div class="battle-setup-box">
+      <h1>BATTLE</h1>
+      <div class="sub">// fight session with enemies &amp; hp tracking</div>
+      <div class="frow">
+        <label>Number of Characters</label>
+        <div id="bc-char-row">
+          <input type="number" id="bc-char-count" min="1" max="10" value="1" style="width:80px">
+          <button class="btn btn-blue btn-sm" onclick="updateBattleCharInputs()">SET</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label>Character Names</label>
+        <div class="char-inputs" id="bc-char-inputs"><input type="text" placeholder="Name or #ID" data-idx="0"></div>
+        <div class="hint">// plain name = regular · #ID = load preset</div>
+      </div>
+      <div class="frow">
+        <label>Number of Enemies</label>
+        <div id="bc-enemy-row">
+          <input type="number" id="bc-enemy-count" min="1" max="10" value="1" style="width:80px">
+          <button class="btn btn-blue btn-sm" onclick="updateEnemyInputs()">SET</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label>Enemies (Name · Max HP)</label>
+        <div class="enemy-inputs" id="bc-enemy-inputs">
+          <div class="enemy-row-input">
+            <input type="text" placeholder="Enemy name" data-eidx="0">
+            <input type="number" placeholder="HP" min="1" data-eidx="0">
+          </div>
+        </div>
+      </div>
+      <div class="frow">
+        <label>Time Limit (seconds, optional)</label>
+        <input type="number" id="bc-timer" min="1" placeholder="leave empty = no limit">
+      </div>
+      <button class="btn btn-blue btn-sm" style="width:100%;margin-top:8px;font-size:13px;padding:10px" onclick="startBattle()">START BATTLE</button>
+    </div>
+  </div>
+
+  <!-- Preset Library -->
+  <div class="lib-box">
+    <h2>Preset Characters</h2>
+    <div class="lib-add-row">
+      <input type="text" id="new-pc-id" placeholder="#ID" style="width:70px;flex-shrink:0">
+      <input type="text" id="new-pc-name" placeholder="Character name…">
+      <button class="btn btn-secondary btn-sm" onclick="addPresetChar()">+ ADD</button>
+    </div>
+    <div class="pc-list" id="pc-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ DMG CALC APP SCREEN ══════════════════════════════ -->
+<div id="app-screen">
+  <div id="stats-bar">
+    <div class="stats-top">
+      <div class="app-title">// DMG CALC</div>
+      <button class="btn btn-danger btn-sm" onclick="openResetModal()">RESET</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-cell"><div class="lbl">Total Time</div><div class="val" id="s-time">0.00s</div></div>
+      <div class="stat-cell"><div class="lbl">Total DMG</div><div class="val" id="s-dmg">0</div></div>
+      <div class="stat-cell"><div class="lbl">Team DPS</div><div class="val" id="s-dps">0.00</div></div>
+    </div>
+    <div id="csg"></div>
+  </div>
+  <div id="effects-bar">
+    <span class="eff-lbl">ACTIVE EFFECTS:</span>
+    <span id="eff-list" style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>
+  </div>
+  <div id="log-area"><div class="empty-log">// no abilities logged yet</div></div>
+  <div id="lab"><button class="btn btn-primary" onclick="openAddModal()">+ LOG ABILITY</button></div>
+</div>
+
+<!-- ══════════════════════════════ BATTLE SCREEN ══════════════════════════════ -->
+<div id="battle-screen">
+  <div id="battle-top">
+    <div class="battle-top-row">
+      <div class="battle-title">// BATTLE</div>
+      <div class="timer-display" id="battle-timer-display">--</div>
+      <button class="btn btn-danger btn-sm" onclick="openBattleResetModal()">END BATTLE</button>
+    </div>
+    <div id="enemy-grid"></div>
+    <div id="battle-effects-bar">
+      <span class="eff-lbl">ACTIVE EFFECTS:</span>
+      <span id="battle-eff-list" style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>
+    </div>
+  </div>
+  <div id="battle-log-area"><div class="empty-log">// no actions yet</div></div>
+  <div id="battle-bottom">
+    <div id="battle-csg"></div>
+    <div id="battle-lab"><button class="btn btn-primary" onclick="openBattleAddModal()">+ LOG ABILITY</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ LOG MODAL (shared by calc + battle) ══════════════════════════════ -->
+<div id="log-modal" class="mov z150">
+  <div class="mbox">
+    <h2 id="lm-title">LOG ABILITY</h2>
+    <div class="mg">
+      <div class="full"><label>Character</label><select id="lm-char"></select></div>
+      <div class="full"><label>Ability Name</label><input type="text" id="lm-name" placeholder="e.g. Shot"></div>
+      <div class="full"><label>Description</label><textarea id="lm-desc" placeholder="What does it do?"></textarea></div>
+      <div><label>Cast Time (s)</label><input type="number" id="lm-cast" min="0" step="0.1" placeholder="0"></div>
+      <div><label>Cooldown (s)</label><input type="number" id="lm-cd" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><label>Hit Type</label><select id="lm-hittype"><option value="single">Single Target</option><option value="multi">Multi Hit (all enemies)</option></select></div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Damage Type</div>
+    <div class="dtt" id="lm-tabs">
+      <div class="dt active" data-t="normal" onclick="setTab('lm','normal')">NORMAL</div>
+      <div class="dt" data-t="delayed" onclick="setTab('lm','delayed')">DELAYED</div>
+      <div class="dt" data-t="dot" onclick="setTab('lm','dot')">DOT</div>
+    </div>
+    <div class="dtf active" id="lm-dtf-normal">
+      <div class="mg"><div><label>Flat Damage <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="lm-dmg-n" min="0" placeholder="optional"></div></div>
+      <button class="adv-toggle" onclick="toggleAdv('lm-adv-n')">▶ ADVANCED DAMAGE</button>
+      <div class="adv-fields" id="lm-adv-n">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100)</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="lm-stat-n" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('lm','n')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="lm-mult-n" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('lm','n')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="lm-b1-n" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('lm','n')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="lm-b2-n" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('lm','n')"></div>
+          <div class="full"><div class="adv-preview" id="lm-prev-n"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dtf" id="lm-dtf-delayed">
+      <div class="mg">
+        <div><label>Flat Damage <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="lm-dmg-d" min="0" placeholder="optional"></div>
+        <div><label>Delay (s after cast)</label><input type="number" id="lm-delay" min="0" step="0.1" placeholder="e.g. 3"></div>
+      </div>
+      <button class="adv-toggle" onclick="toggleAdv('lm-adv-d')">▶ ADVANCED DAMAGE</button>
+      <div class="adv-fields" id="lm-adv-d">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100)</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="lm-stat-d" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('lm','d')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="lm-mult-d" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('lm','d')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="lm-b1-d" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('lm','d')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="lm-b2-d" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('lm','d')"></div>
+          <div class="full"><div class="adv-preview" id="lm-prev-d"></div></div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:-4px">DMG hits X seconds after cast begins.</div>
+    </div>
+    <div class="dtf" id="lm-dtf-dot">
+      <div class="mg">
+        <div><label>Flat DMG/tick <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="lm-dmg-t" min="0" placeholder="optional"></div>
+        <div><label>Tick every (s)</label><input type="number" id="lm-tick-i" min="0.1" step="0.1" placeholder="e.g. 2"></div>
+        <div><label>Duration (s)</label><input type="number" id="lm-tick-d" min="0" step="0.1" placeholder="e.g. 4"></div>
+        <div style="display:flex;align-items:flex-end"><div id="lm-dot-prev" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:8px"></div></div>
+      </div>
+      <button class="adv-toggle" onclick="toggleAdv('lm-adv-t')">▶ ADVANCED DAMAGE (per tick)</button>
+      <div class="adv-fields" id="lm-adv-t">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100) per tick</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="lm-stat-t" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('lm','t')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="lm-mult-t" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('lm','t')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="lm-b1-t" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('lm','t')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="lm-b2-t" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('lm','t')"></div>
+          <div class="full"><div class="adv-preview" id="lm-prev-t"></div></div>
+        </div>
+      </div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Effect (Optional)</div>
+    <div class="mg">
+      <div><label>Effect Name</label><input type="text" id="lm-eff-n" placeholder="e.g. Bleed"></div>
+      <div><label>Effect Duration (s)</label><input type="number" id="lm-eff-d" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><div class="cb-row"><input type="checkbox" id="lm-stacks"><label for="lm-stacks">Effect stacks on reuse (unchecked = refresh)</label></div></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-primary" id="lm-ok" onclick="confirmLogModal()">CONFIRM</button>
+      <button class="btn btn-ghost" onclick="closeLogModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ ABILITY EDITOR MODAL ══════════════════════════════ -->
+<div id="ae-modal" class="mov z200">
+  <div class="mbox">
+    <h2 id="ae-title">ADD ABILITY</h2>
+    <div class="mg">
+      <div class="full"><label>Ability Name</label><input type="text" id="ae-name" placeholder="e.g. Fireball"></div>
+      <div class="full"><label>Description</label><textarea id="ae-desc" placeholder="What does it do?"></textarea></div>
+      <div><label>Cast Time (s)</label><input type="number" id="ae-cast" min="0" step="0.1" placeholder="0"></div>
+      <div><label>Cooldown (s)</label><input type="number" id="ae-cd" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><label>Hit Type</label><select id="ae-hittype"><option value="single">Single Target</option><option value="multi">Multi Hit (all enemies)</option></select></div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Damage Type</div>
+    <div class="dtt" id="ae-tabs">
+      <div class="dt active" data-t="normal" onclick="setTab('ae','normal')">NORMAL</div>
+      <div class="dt" data-t="delayed" onclick="setTab('ae','delayed')">DELAYED</div>
+      <div class="dt" data-t="dot" onclick="setTab('ae','dot')">DOT</div>
+    </div>
+    <div class="dtf active" id="ae-dtf-normal">
+      <div class="mg"><div><label>Flat Damage <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="ae-dmg-n" min="0" placeholder="optional"></div></div>
+      <button class="adv-toggle" onclick="toggleAdv('ae-adv-n')">▶ ADVANCED DAMAGE</button>
+      <div class="adv-fields" id="ae-adv-n">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100)</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="ae-stat-n" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('ae','n')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="ae-mult-n" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('ae','n')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="ae-b1-n" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('ae','n')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="ae-b2-n" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('ae','n')"></div>
+          <div class="full"><div class="adv-preview" id="ae-prev-n"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dtf" id="ae-dtf-delayed">
+      <div class="mg">
+        <div><label>Flat Damage <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="ae-dmg-d" min="0" placeholder="optional"></div>
+        <div><label>Delay (s after cast)</label><input type="number" id="ae-delay" min="0" step="0.1" placeholder="e.g. 3"></div>
+      </div>
+      <button class="adv-toggle" onclick="toggleAdv('ae-adv-d')">▶ ADVANCED DAMAGE</button>
+      <div class="adv-fields" id="ae-adv-d">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100)</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="ae-stat-d" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('ae','d')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="ae-mult-d" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('ae','d')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="ae-b1-d" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('ae','d')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="ae-b2-d" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('ae','d')"></div>
+          <div class="full"><div class="adv-preview" id="ae-prev-d"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dtf" id="ae-dtf-dot">
+      <div class="mg">
+        <div><label>Flat DMG/tick <span style="color:var(--muted)">(leave empty for advanced)</span></label><input type="number" id="ae-dmg-t" min="0" placeholder="optional"></div>
+        <div><label>Tick every (s)</label><input type="number" id="ae-tick-i" min="0.1" step="0.1" placeholder="e.g. 2"></div>
+        <div><label>Duration (s)</label><input type="number" id="ae-tick-d" min="0" step="0.1" placeholder="e.g. 4"></div>
+        <div style="display:flex;align-items:flex-end"><div id="ae-dot-prev" style="font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:8px"></div></div>
+      </div>
+      <button class="adv-toggle" onclick="toggleAdv('ae-adv-t')">▶ ADVANCED DAMAGE (per tick)</button>
+      <div class="adv-fields" id="ae-adv-t">
+        <div class="adv-note">Stat × (Mult/100) × (1+B1/100) × (1+B2/100) per tick</div>
+        <div class="mg">
+          <div><label>Stat</label><input type="number" id="ae-stat-t" min="0" placeholder="e.g. 500" oninput="updateAdvPrev('ae','t')"></div>
+          <div><label>Multiplier (%)</label><input type="number" id="ae-mult-t" min="0" placeholder="e.g. 160" oninput="updateAdvPrev('ae','t')"></div>
+          <div><label>Buff 1 (%)</label><input type="number" id="ae-b1-t" min="0" placeholder="e.g. 15" oninput="updateAdvPrev('ae','t')"></div>
+          <div><label>Buff 2 (%)</label><input type="number" id="ae-b2-t" min="0" placeholder="e.g. 20" oninput="updateAdvPrev('ae','t')"></div>
+          <div class="full"><div class="adv-preview" id="ae-prev-t"></div></div>
+        </div>
+      </div>
+    </div>
+    <hr class="sdiv"><div class="slbl">Effect (Optional)</div>
+    <div class="mg">
+      <div><label>Effect Name</label><input type="text" id="ae-eff-n" placeholder="e.g. Bleed"></div>
+      <div><label>Effect Duration (s)</label><input type="number" id="ae-eff-d" min="0" step="0.1" placeholder="0"></div>
+      <div class="full"><div class="cb-row"><input type="checkbox" id="ae-stacks"><label for="ae-stacks">Effect stacks on reuse</label></div></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-primary" onclick="confirmAbilityEditor()">SAVE ABILITY</button>
+      <button class="btn btn-ghost" onclick="closeAeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ PRESET ABILITIES PANEL ══════════════════════════════ -->
+<div id="pp">
+  <div class="pp-box">
+    <div class="pp-head">
+      <h3 id="pp-title">ABILITIES</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closePP()">CLOSE</button>
+    </div>
+    <div class="pp-list" id="pp-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ TARGET PICKER MODAL ══════════════════════════════ -->
+<div id="target-modal" class="mov z250">
+  <div class="mbox" style="max-width:380px">
+    <h2>PICK TARGET</h2>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px">Select which enemy to hit.</p>
+    <div class="target-list" id="target-list"></div>
+    <div class="ma"><button class="btn btn-ghost btn-sm" onclick="closeTargetModal()">CANCEL</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ RESULT MODAL ══════════════════════════════ -->
+<div id="result-modal" class="mov z300">
+  <div class="result-box" id="result-box">
+    <h3 id="result-title"></h3>
+    <p id="result-msg"></p>
+    <button class="btn btn-ghost btn-sm" onclick="closeResultModal()">DISMISS</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ ALERT MODAL ══════════════════════════════ -->
+<div id="alert-modal" class="mov z300">
+  <div class="abox">
+    <h3>⚠ ABILITY ON COOLDOWN</h3>
+    <p id="alert-msg"></p>
+    <div class="aacts">
+      <button class="btn btn-danger btn-sm" id="alert-force">USE REGARDLESS</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeAlert()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ RESET MODAL ══════════════════════════════ -->
+<div id="reset-modal" class="mov z300">
+  <div class="rbox">
+    <h3>⚠ RESET</h3>
+    <p>Choose an option. Both clear the current log and cannot be undone.</p>
+    <div class="racts" style="flex-direction:column;gap:8px">
+      <button class="btn btn-danger btn-sm" style="width:100%" onclick="doReset()">CLEAR LOG — keep characters</button>
+      <button class="btn btn-danger btn-sm" style="width:100%;opacity:.75" onclick="goToSetup()">NEW SESSION — back to setup</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="closeResetModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ BATTLE RESET MODAL ══════════════════════════════ -->
+<div id="battle-reset-modal" class="mov z300">
+  <div class="rbox">
+    <h3>⚠ END BATTLE</h3>
+    <p>Return to setup? All battle data will be lost.</p>
+    <div class="racts" style="flex-direction:column;gap:8px">
+      <button class="btn btn-danger btn-sm" style="width:100%" onclick="endBattle()">CONFIRM — back to setup</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="closeBattleResetModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ CONFIRM MODAL ══════════════════════════════ -->
+<div id="cf-modal" class="mov z300">
+  <div class="cfbox">
+    <h3 id="cf-title">CONFIRM</h3>
+    <p id="cf-msg"></p>
+    <div class="cfacts">
+      <button class="btn btn-danger btn-sm" id="cf-ok">CONFIRM</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeCF()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════
+function savePresets(){localStorage.setItem('dmgcalc_v2',JSON.stringify({chars:presetChars,nextPCId,nextAbId}));}
+function loadPresets(){try{const r=localStorage.getItem('dmgcalc_v2');if(r)return JSON.parse(r);}catch(e){}return null;}
+
+// ══════════════════════════════════════════════
+// GLOBAL STATE
+// ══════════════════════════════════════════════
+const _saved=loadPresets();
+let presetChars=_saved?_saved.chars:[];
+let nextPCId=_saved?_saved.nextPCId:1;
+let nextAbId=_saved?_saved.nextAbId:1;
+
+// DMG Calc state
+let characters=[];
+let log=[];
+let nextLogId=1;
+
+// Battle state
+let bCharacters=[];
+let bEnemies=[];      // [{name,maxHp,hp}]
+let bLog=[];
+let bNextLogId=1;
+let bTimerTotal=0;    // 0 = no limit
+let bTimerLeft=0;
+let bTimerInterval=null;
+let bOver=false;      // win or lose already triggered
+
+// Modal state
+let lmTab='normal';
+let aeTab='normal';
+let lmMode='add';     // 'add'|'reuse'|'puse'|'battle-add'|'battle-reuse'|'battle-puse'
+let aeTargetPCId=null;
+let aeEditAbId=null;
+let ppCharIdx=null;
+let ppContext='calc'; // 'calc'|'battle'
+let pendingLogEntry=null; // used for target picker flow
+
+// Shared log source pointer (so renderLog / CDremaining know which log to use)
+function activeLog(){return lmMode.startsWith('battle')?bLog:log;}
+function activeChars(){return lmMode.startsWith('battle')?bCharacters:characters;}
+
+// ══════════════════════════════════════════════
+// SETUP — DMG CALC
+// ══════════════════════════════════════════════
+function updateCharInputs(){
+  const n=Math.max(1,parseInt(document.getElementById('char-count').value)||1);
+  const c=document.getElementById('char-inputs');
+  const ex=[...c.querySelectorAll('input')].map(i=>i.value);
+  c.innerHTML='';
+  for(let i=0;i<n;i++){const inp=document.createElement('input');inp.type='text';inp.placeholder='Name or #ID';inp.dataset.idx=i;inp.value=ex[i]||'';c.appendChild(inp);}
+}
+
+function resolveCharInputs(containerSelector){
+  const chars=[];
+  document.querySelectorAll(containerSelector+' input').forEach((inp,i)=>{
+    const val=inp.value.trim();
+    if(!val){chars.push({name:'Character '+(i+1),presetId:null});return;}
+    const m=val.match(/^#(\d+)$/i);
+    if(m){const pid=parseInt(m[1]);const pc=presetChars.find(c=>c.id===pid);if(pc){chars.push({name:pc.name,presetId:pid});return;}}
+    chars.push({name:val,presetId:null});
+  });
+  return chars;
+}
+
+function startApp(){
+  characters=resolveCharInputs('#char-inputs');
+  log=[];nextLogId=1;
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  populateCharSelect(characters,'lm-char');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// SETUP — BATTLE
+// ══════════════════════════════════════════════
+function updateBattleCharInputs(){
+  const n=Math.max(1,parseInt(document.getElementById('bc-char-count').value)||1);
+  const c=document.getElementById('bc-char-inputs');
+  const ex=[...c.querySelectorAll('input')].map(i=>i.value);
+  c.innerHTML='';
+  for(let i=0;i<n;i++){const inp=document.createElement('input');inp.type='text';inp.placeholder='Name or #ID';inp.dataset.idx=i;inp.value=ex[i]||'';c.appendChild(inp);}
+}
+
+function updateEnemyInputs(){
+  const n=Math.max(1,parseInt(document.getElementById('bc-enemy-count').value)||1);
+  const c=document.getElementById('bc-enemy-inputs');
+  const exNames=[...c.querySelectorAll('input[data-eidx]')].filter((_,i)=>i%2===0).map(i=>i.value);
+  const exHps  =[...c.querySelectorAll('input[data-eidx]')].filter((_,i)=>i%2===1).map(i=>i.value);
+  c.innerHTML='';
+  for(let i=0;i<n;i++){
+    const row=document.createElement('div');row.className='enemy-row-input';
+    const nm=document.createElement('input');nm.type='text';nm.placeholder='Enemy name';nm.dataset.eidx=i;nm.value=exNames[i]||'';
+    const hp=document.createElement('input');hp.type='number';hp.placeholder='HP';hp.min='1';hp.dataset.eidx=i;hp.value=exHps[i]||'';
+    row.appendChild(nm);row.appendChild(hp);c.appendChild(row);
+  }
+}
+
+function startBattle(){
+  bCharacters=resolveCharInputs('#bc-char-inputs');
+  if(bCharacters.length===0){alert('Add at least one character.');return;}
+  const nameInputs=[...document.querySelectorAll('#bc-enemy-inputs .enemy-row-input')];
+  bEnemies=[];
+  for(let i=0;i<nameInputs.length;i++){
+    const row=nameInputs[i];
+    const nm=row.querySelector('input[type="text"]').value.trim()||'Enemy '+(i+1);
+    const hp=parseInt(row.querySelector('input[type="number"]').value)||100;
+    bEnemies.push({name:nm,maxHp:hp,hp});
+  }
+  if(bEnemies.length===0){alert('Add at least one enemy.');return;}
+  const timerVal=parseFloat(document.getElementById('bc-timer').value)||0;
+  bTimerTotal=timerVal;bOver=false;bLog=[];bNextLogId=1;
+  if(bTimerInterval)clearInterval(bTimerInterval);bTimerInterval=null;
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('battle-screen').style.display='flex';
+  populateCharSelect(bCharacters,'lm-char');
+  renderBattleAll();
+}
+
+// ══════════════════════════════════════════════
+// PRESET LIBRARY
+// ══════════════════════════════════════════════
+function addPresetChar(){
+  const idInp=document.getElementById('new-pc-id');
+  const nameInp=document.getElementById('new-pc-name');
+  const rawId=idInp.value.trim().replace(/^#/,'');
+  const name=nameInp.value.trim();
+  if(!rawId){alert('Please enter an ID.');return;}
+  if(!name){alert('Please enter a name.');return;}
+  const pid=parseInt(rawId);
+  if(isNaN(pid)||pid<=0){alert('ID must be a positive number.');return;}
+  if(presetChars.find(c=>c.id===pid)){alert(`ID #${pid} is already taken.`);return;}
+  presetChars.push({id:pid,name,abilities:[]});
+  savePresets();idInp.value='';nameInp.value='';renderLibrary();
+}
+
+function deletePresetChar(pid){
+  showCF('DELETE CHARACTER','Permanently delete this preset and all their abilities?',()=>{
+    presetChars=presetChars.filter(c=>c.id!==pid);savePresets();renderLibrary();
+  });
+}
+
+function startRenamePC(pid){
+  const card=document.getElementById('pc-'+pid);
+  card.querySelector('.pc-name-static').style.display='none';
+  const ei=card.querySelector('.pc-name-edit');ei.classList.add('open');ei.focus();ei.select();
+}
+
+function saveRenamePC(pid){
+  const card=document.getElementById('pc-'+pid);
+  const val=card.querySelector('.pc-name-edit').value.trim();
+  if(val){const pc=presetChars.find(c=>c.id===pid);if(pc)pc.name=val;savePresets();}
+  renderLibrary();
+}
+
+const pcExpanded=new Set();
+function togglePCExpand(pid){pcExpanded.has(pid)?pcExpanded.delete(pid):pcExpanded.add(pid);renderLibrary();}
+
+function renderLibrary(){
+  const list=document.getElementById('pc-list');
+  if(presetChars.length===0){list.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:12px">// no preset characters yet</div>';return;}
+  list.innerHTML='';
+  [...presetChars].reverse().forEach(pc=>{
+    const expanded=pcExpanded.has(pc.id);
+    const card=document.createElement('div');card.className='pc-card';card.id='pc-'+pc.id;
+    const abRows=pc.abilities.length>0
+      ?pc.abilities.map(ab=>{
+          const td=abTotalDmg(ab);
+          const tt=ab.dmgType!=='normal'?` <span style="color:${ab.dmgType==='dot'?'#8e44ad':'#e67e22'}">[${ab.dmgType.toUpperCase()}]</span>`:'';
+          const ht=ab.hitType==='multi'?` <span style="color:#5dade2">[MULTI]</span>`:'';
+          return `<div class="pc-ab-row">
+            <div class="pc-ab-info">
+              <span class="abn">${ab.name}</span>${tt}${ht}
+              <span>DMG ${td} · CAST ${ab.castTime}s · CD ${ab.cooldown}s${ab.effectName?' · ⬡ '+ab.effectName:''}</span>
+              ${ab.desc?`<span style="font-style:italic;font-size:10px">${ab.desc}</span>`:''}
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <button class="btn btn-ghost btn-xs" onclick="openAeModal(${pc.id},${ab.id})">EDIT</button>
+              <button class="btn btn-danger btn-xs" onclick="deletePresetAbility(${pc.id},${ab.id})">DEL</button>
+            </div>
+          </div>`;
+        }).join('')
+      :'<div class="pc-no-ab">no abilities saved yet</div>';
+    card.innerHTML=`
+      <div class="pc-head">
+        <div class="pc-meta">
+          <div class="pc-id">#${pc.id}</div>
+          <div class="pc-name-static">${pc.name}</div>
+          <input class="pc-name-edit" type="text" value="${pc.name}" onblur="saveRenamePC(${pc.id})" onkeydown="if(event.key==='Enter')saveRenamePC(${pc.id})">
+        </div>
+        <div class="pc-actions">
+          <button class="btn btn-ghost btn-xs" onclick="togglePCExpand(${pc.id})">${expanded?'▲':'▼'}</button>
+          <button class="btn btn-ghost btn-xs" onclick="startRenamePC(${pc.id})">RENAME</button>
+          <button class="btn btn-secondary btn-xs" onclick="openAeModal(${pc.id},null)">+ ABILITY</button>
+          <button class="btn btn-danger btn-xs" onclick="deletePresetChar(${pc.id})">DELETE</button>
+        </div>
+      </div>
+      ${expanded?`<div class="pc-ab-list">${abRows}</div>`:''}
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════
+// ABILITY EDITOR
+// ══════════════════════════════════════════════
+function openAeModal(pcId,abId){
+  aeTargetPCId=pcId;aeEditAbId=abId;
+  clearAeFields();setTab('ae','normal');
+  if(abId!==null){
+    const pc=presetChars.find(c=>c.id===pcId);
+    const ab=pc&&pc.abilities.find(a=>a.id===abId);
+    if(ab){
+      document.getElementById('ae-title').textContent='EDIT ABILITY';
+      document.getElementById('ae-name').value=ab.name;
+      document.getElementById('ae-desc').value=ab.desc||'';
+      document.getElementById('ae-cast').value=ab.castTime;
+      document.getElementById('ae-cd').value=ab.cooldown;
+      document.getElementById('ae-hittype').value=ab.hitType||'single';
+      setTab('ae',ab.dmgType||'normal');
+      const slot=ab.dmgType==='delayed'?'d':ab.dmgType==='dot'?'t':'n';
+      const fe=document.getElementById('ae-dmg-'+slot);
+      if(fe&&ab.dmgFlat!==null&&ab.dmgFlat!==undefined)fe.value=ab.dmgFlat;
+      if(ab.stat){
+        ['stat','mult','b1','b2'].forEach(k=>{const el=document.getElementById('ae-'+k+'-'+slot);if(el)el.value=ab[k]||'';});
+        const adv=document.getElementById('ae-adv-'+slot);
+        if(adv){adv.classList.add('open');const btn=adv.previousElementSibling;if(btn)btn.textContent=btn.textContent.replace(/^▶/,'▼');}
+        updateAdvPrev('ae',slot);
+      }
+      if(ab.dmgType==='delayed')document.getElementById('ae-delay').value=ab.delay||0;
+      if(ab.dmgType==='dot'){document.getElementById('ae-tick-i').value=ab.dotInterval||0;document.getElementById('ae-tick-d').value=ab.dotDuration||0;updateDotPrev('ae');}
+      document.getElementById('ae-eff-n').value=ab.effectName||'';
+      document.getElementById('ae-eff-d').value=ab.effectDuration||'';
+      document.getElementById('ae-stacks').checked=ab.stacks||false;
+    }
+  } else {
+    document.getElementById('ae-title').textContent='ADD ABILITY';
+  }
+  document.getElementById('ae-modal').classList.add('open');
+}
+
+function closeAeModal(){document.getElementById('ae-modal').classList.remove('open');}
+
+function clearAeFields(){
+  ['ae-name','ae-desc','ae-eff-n'].forEach(id=>document.getElementById(id).value='');
+  ['ae-dmg-n','ae-dmg-d','ae-dmg-t','ae-cast','ae-cd','ae-delay','ae-tick-i','ae-tick-d','ae-eff-d',
+   'ae-stat-n','ae-mult-n','ae-b1-n','ae-b2-n','ae-stat-d','ae-mult-d','ae-b1-d','ae-b2-d',
+   'ae-stat-t','ae-mult-t','ae-b1-t','ae-b2-t'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['ae-prev-n','ae-prev-d','ae-prev-t','ae-dot-prev'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  ['ae-adv-n','ae-adv-d','ae-adv-t'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('open');const btn=el.previousElementSibling;if(btn)btn.textContent=btn.textContent.replace(/^▼/,'▶');}});
+  document.getElementById('ae-stacks').checked=false;
+  document.getElementById('ae-hittype').value='single';
+}
+
+function confirmAbilityEditor(){
+  const name=document.getElementById('ae-name').value.trim();
+  if(!name){alert('Ability name is required.');return;}
+  const desc=document.getElementById('ae-desc').value.trim();
+  const castTime=parseFloat(document.getElementById('ae-cast').value)||0;
+  const cooldown=parseFloat(document.getElementById('ae-cd').value)||0;
+  const hitType=document.getElementById('ae-hittype').value;
+  const effName=document.getElementById('ae-eff-n').value.trim();
+  const effDur=parseFloat(document.getElementById('ae-eff-d').value)||0;
+  const stacks=document.getElementById('ae-stacks').checked;
+  const dmgType=aeTab;
+  const slot=dmgType==='delayed'?'d':dmgType==='dot'?'t':'n';
+  const flatRaw=document.getElementById('ae-dmg-'+slot).value;
+  const dmgFlat=flatRaw!==''?parseFloat(flatRaw):null;
+  const stat=parseFloat(document.getElementById('ae-stat-'+slot).value)||0;
+  const mult=parseFloat(document.getElementById('ae-mult-'+slot).value)||0;
+  const b1=parseFloat(document.getElementById('ae-b1-'+slot).value)||0;
+  const b2=parseFloat(document.getElementById('ae-b2-'+slot).value)||0;
+  let delay=0,dotInterval=0,dotDuration=0;
+  if(dmgType==='delayed')delay=parseFloat(document.getElementById('ae-delay').value)||0;
+  if(dmgType==='dot'){dotInterval=parseFloat(document.getElementById('ae-tick-i').value)||0;dotDuration=parseFloat(document.getElementById('ae-tick-d').value)||0;if(dotInterval<=0){alert('DoT interval must be > 0.');return;}}
+  const pc=presetChars.find(c=>c.id===aeTargetPCId);if(!pc)return;
+  const abData={name,desc,castTime,cooldown,hitType,dmgType,dmgFlat,stat,mult,b1,b2,delay,dotInterval,dotDuration,effectName:effName,effectDuration:effDur,stacks};
+  if(aeEditAbId!==null){const ab=pc.abilities.find(a=>a.id===aeEditAbId);if(ab)Object.assign(ab,abData);}
+  else pc.abilities.push({id:nextAbId++,...abData});
+  savePresets();closeAeModal();renderLibrary();
+}
+
+function deletePresetAbility(pcId,abId){
+  showCF('DELETE ABILITY','Remove this ability from the preset?',()=>{
+    const pc=presetChars.find(c=>c.id===pcId);if(pc)pc.abilities=pc.abilities.filter(a=>a.id!==abId);
+    savePresets();renderLibrary();
+  });
+}
+
+// ══════════════════════════════════════════════
+// DMG TAB + DOT PREVIEW + ADV HELPERS
+// ══════════════════════════════════════════════
+function setTab(scope,type){
+  if(scope==='lm')lmTab=type;else aeTab=type;
+  document.getElementById(scope+'-tabs').querySelectorAll('.dt').forEach(t=>t.classList.toggle('active',t.dataset.t===type));
+  ['normal','delayed','dot'].forEach(t=>{const el=document.getElementById(scope+'-dtf-'+t);if(el)el.classList.toggle('active',t===type);});
+}
+
+function updateDotPrev(scope){
+  const pfx=scope;
+  const dmgPer=parseFloat(document.getElementById(pfx+'-dmg-t').value)||0;
+  const iv=parseFloat(document.getElementById(pfx+'-tick-i').value)||0;
+  const dur=parseFloat(document.getElementById(pfx+'-tick-d').value)||0;
+  const el=document.getElementById(pfx+'-dot-prev');
+  if(iv>0&&dur>0){const t=Math.floor(dur/iv);el.textContent=`${t} tick${t!==1?'s':''} = ${t*dmgPer} total dmg`;}
+  else if(el)el.textContent='';
+}
+
+function toggleAdv(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.toggle('open');
+  const btn=el.previousElementSibling;
+  if(btn&&btn.classList.contains('adv-toggle'))btn.textContent=(el.classList.contains('open')?'▼ ':'▶ ')+btn.textContent.replace(/^[▼▶] /,'');
+}
+
+function computeAdvDmg(stat,mult,b1,b2){
+  if(!stat&&!mult)return 0;
+  return Math.round(stat*(mult/100)*(1+(b1||0)/100)*(1+(b2||0)/100));
+}
+
+function updateAdvPrev(scope,slot){
+  const p=scope+'-';
+  const stat=parseFloat(document.getElementById(p+'stat-'+slot).value)||0;
+  const mult=parseFloat(document.getElementById(p+'mult-'+slot).value)||0;
+  const b1=parseFloat(document.getElementById(p+'b1-'+slot).value)||0;
+  const b2=parseFloat(document.getElementById(p+'b2-'+slot).value)||0;
+  const el=document.getElementById(p+'prev-'+slot);if(!el)return;
+  if(stat>0&&mult>0){
+    const result=computeAdvDmg(stat,mult,b1,b2);
+    let f=`${stat}×${mult}%`;if(b1>0)f+=`×(1+${b1}%)`;if(b2>0)f+=`×(1+${b2}%)`;
+    el.textContent=`= ${result}  [${f}]`;
+  } else el.textContent='';
+}
+
+function resolveDmg(flat,stat,mult,b1,b2){
+  if(flat!==null&&flat!==undefined&&flat!=='')return parseFloat(flat)||0;
+  return computeAdvDmg(parseFloat(stat)||0,parseFloat(mult)||0,parseFloat(b1)||0,parseFloat(b2)||0);
+}
+
+// ══════════════════════════════════════════════
+// CHAR SELECT POPULATE
+// ══════════════════════════════════════════════
+function populateCharSelect(chars,selId){
+  const sel=document.getElementById(selId);sel.innerHTML='';
+  chars.forEach((c,i)=>{
+    const opt=document.createElement('option');opt.value=i;
+    opt.textContent=c.presetId?`${c.name} [#${c.presetId}]`:c.name;
+    sel.appendChild(opt);
+  });
+}
+
+// ══════════════════════════════════════════════
+// LOG MODAL — OPEN HELPERS
+// ══════════════════════════════════════════════
+function openAddModal(){
+  lmMode='add';
+  document.getElementById('lm-title').textContent='LOG ABILITY';
+  document.getElementById('lm-ok').textContent='CONFIRM';
+  clearLMFields();setTab('lm','normal');
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function openBattleAddModal(){
+  lmMode='battle-add';
+  populateCharSelect(bCharacters,'lm-char');
+  document.getElementById('lm-title').textContent='LOG ABILITY';
+  document.getElementById('lm-ok').textContent='CONFIRM';
+  clearLMFields();setTab('lm','normal');
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function openReuseModal(logId){
+  const entry=log.find(e=>e.id===logId);if(!entry)return;
+  const cdRem=getCDRemaining(entry,log);
+  const ci=characters.findIndex(c=>c.name===entry.char);
+  if(cdRem>0)showAlert(`${entry.name} still has ${cdRem.toFixed(2)}s on cooldown.\n\nUse regardless?`,()=>_fillAndOpenLM('reuse',entry,ci,characters));
+  else _fillAndOpenLM('reuse',entry,ci,characters);
+}
+
+function openBattleReuseModal(logId){
+  const entry=bLog.find(e=>e.id===logId);if(!entry)return;
+  const cdRem=getCDRemaining(entry,bLog);
+  const ci=bCharacters.findIndex(c=>c.name===entry.char);
+  if(cdRem>0)showAlert(`${entry.name} still has ${cdRem.toFixed(2)}s on cooldown.\n\nUse regardless?`,()=>_fillAndOpenLM('battle-reuse',entry,ci,bCharacters));
+  else _fillAndOpenLM('battle-reuse',entry,ci,bCharacters);
+}
+
+function openPresetUseModal(ab,charIdx){
+  const chars=ppContext==='battle'?bCharacters:characters;
+  const curLog=ppContext==='battle'?bLog:log;
+  const charName=chars[charIdx]&&chars[charIdx].name;
+  const recent=curLog.find(e=>e.char===charName&&e.name===ab.name);
+  const cdRem=recent?getCDRemaining(recent,curLog):0;
+  const mode=ppContext==='battle'?'battle-puse':'puse';
+  if(cdRem>0)showAlert(`${ab.name} still has ${cdRem.toFixed(2)}s on cooldown.\n\nUse regardless?`,()=>_fillAndOpenLM(mode,ab,charIdx,chars));
+  else _fillAndOpenLM(mode,ab,charIdx,chars);
+}
+
+function _fillAndOpenLM(mode,src,charIdx,chars){
+  lmMode=mode;
+  const isBattle=mode.startsWith('battle');
+  if(isBattle)populateCharSelect(bCharacters,'lm-char');
+  else populateCharSelect(characters,'lm-char');
+  document.getElementById('lm-title').textContent=mode==='add'||mode==='battle-add'?'LOG ABILITY':'REUSE ABILITY';
+  document.getElementById('lm-ok').textContent='LOG';
+  clearLMFields();
+  if(charIdx>=0)document.getElementById('lm-char').value=charIdx;
+  document.getElementById('lm-name').value=src.name;
+  document.getElementById('lm-desc').value=src.desc||'';
+  document.getElementById('lm-cast').value=src.castTime;
+  document.getElementById('lm-cd').value=src.cooldown;
+  document.getElementById('lm-hittype').value=src.hitType||'single';
+  setTab('lm',src.dmgType||'normal');
+  const slot=src.dmgType==='delayed'?'d':src.dmgType==='dot'?'t':'n';
+  const fe=document.getElementById('lm-dmg-'+slot);
+  if(fe&&src.dmgFlat!==null&&src.dmgFlat!==undefined)fe.value=src.dmgFlat;
+  if(src.stat){
+    ['stat','mult','b1','b2'].forEach(k=>{const el=document.getElementById('lm-'+k+'-'+slot);if(el)el.value=src[k]||'';});
+    const adv=document.getElementById('lm-adv-'+slot);
+    if(adv){adv.classList.add('open');const btn=adv.previousElementSibling;if(btn)btn.textContent=btn.textContent.replace(/^▶/,'▼');}
+    updateAdvPrev('lm',slot);
+  }
+  if(src.dmgType==='delayed')document.getElementById('lm-delay').value=src.delay||0;
+  if(src.dmgType==='dot'){document.getElementById('lm-tick-i').value=src.dotInterval||0;document.getElementById('lm-tick-d').value=src.dotDuration||0;updateDotPrev('lm');}
+  document.getElementById('lm-eff-n').value=src.effectName||'';
+  document.getElementById('lm-eff-d').value=src.effectDuration||'';
+  document.getElementById('lm-stacks').checked=src.stacks||false;
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function closeLogModal(){document.getElementById('log-modal').classList.remove('open');}
+
+function clearLMFields(){
+  ['lm-name','lm-desc','lm-eff-n'].forEach(id=>document.getElementById(id).value='');
+  ['lm-dmg-n','lm-dmg-d','lm-dmg-t','lm-cast','lm-cd','lm-delay','lm-tick-i','lm-tick-d','lm-eff-d',
+   'lm-stat-n','lm-mult-n','lm-b1-n','lm-b2-n','lm-stat-d','lm-mult-d','lm-b1-d','lm-b2-d',
+   'lm-stat-t','lm-mult-t','lm-b1-t','lm-b2-t'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['lm-prev-n','lm-prev-d','lm-prev-t','lm-dot-prev'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  ['lm-adv-n','lm-adv-d','lm-adv-t'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('open');const btn=el.previousElementSibling;if(btn)btn.textContent=btn.textContent.replace(/^▼/,'▶');}});
+  document.getElementById('lm-stacks').checked=false;
+  document.getElementById('lm-hittype').value='single';
+}
+
+// ══════════════════════════════════════════════
+// CONFIRM LOG MODAL
+// ══════════════════════════════════════════════
+function confirmLogModal(){
+  const charIdx=parseInt(document.getElementById('lm-char').value);
+  const name=document.getElementById('lm-name').value.trim();
+  if(!name){alert('Ability name is required.');return;}
+  const desc=document.getElementById('lm-desc').value.trim();
+  const castTime=parseFloat(document.getElementById('lm-cast').value)||0;
+  const cooldown=parseFloat(document.getElementById('lm-cd').value)||0;
+  const hitType=document.getElementById('lm-hittype').value;
+  const effName=document.getElementById('lm-eff-n').value.trim();
+  const effDur=parseFloat(document.getElementById('lm-eff-d').value)||0;
+  const stacks=document.getElementById('lm-stacks').checked;
+  const dmgType=lmTab;
+  const slot=dmgType==='normal'?'n':dmgType==='delayed'?'d':'t';
+  const flatRaw=document.getElementById('lm-dmg-'+slot).value;
+  const dmgFlat=flatRaw!==''?parseFloat(flatRaw):null;
+  const stat=parseFloat(document.getElementById('lm-stat-'+slot).value)||0;
+  const mult=parseFloat(document.getElementById('lm-mult-'+slot).value)||0;
+  const b1=parseFloat(document.getElementById('lm-b1-'+slot).value)||0;
+  const b2=parseFloat(document.getElementById('lm-b2-'+slot).value)||0;
+  let delay=0,dotInterval=0,dotDuration=0;
+  if(dmgType==='delayed')delay=parseFloat(document.getElementById('lm-delay').value)||0;
+  if(dmgType==='dot'){
+    dotInterval=parseFloat(document.getElementById('lm-tick-i').value)||0;
+    dotDuration=parseFloat(document.getElementById('lm-tick-d').value)||0;
+    if(dotInterval<=0){alert('DoT interval must be > 0.');return;}
+  }
+  const isBattle=lmMode.startsWith('battle');
+  const chars=isBattle?bCharacters:characters;
+  const charObj=chars[charIdx]||chars[0];
+  const entry={
+    id:(isBattle?bNextLogId++:nextLogId++),
+    char:charObj.name,name,desc,castTime,cooldown,hitType,
+    dmgType,dmgFlat,stat,mult,b1,b2,delay,dotInterval,dotDuration,
+    effectName:effName,effectDuration:effDur,stacks,timeAt:0,
+    targets:null // filled in later for battle single-target
+  };
+
+  if(isBattle&&hitType==='single'){
+    // store entry temporarily, open target picker
+    pendingLogEntry=entry;
+    closeLogModal();
+    closePP();
+    openTargetPicker();
+  } else if(isBattle&&hitType==='multi'){
+    // apply to all living enemies
+    const living=bEnemies.filter(e=>e.hp>0);
+    const baseDmg=resolveDmg(entry.dmgFlat,entry.stat,entry.mult,entry.b1,entry.b2);
+    const perTargetDmg=logEntryDmg(entry);
+    entry.targets=living.map(e=>e.name);
+    // apply damage to each
+    living.forEach(e=>{e.hp=Math.max(0,e.hp-perTargetDmg);});
+    entry.totalBattleDmg=perTargetDmg*living.length;
+    bLog.unshift(entry);
+    recalcBattle();
+    closeLogModal();closePP();
+    renderBattleAll();
+    checkWin();
+  } else {
+    // DMG calc mode
+    log.unshift(entry);
+    recalc();
+    closeLogModal();closePP();
+    renderAll();
+  }
+}
+
+// ══════════════════════════════════════════════
+// TARGET PICKER
+// ══════════════════════════════════════════════
+function openTargetPicker(){
+  const list=document.getElementById('target-list');
+  list.innerHTML='';
+  bEnemies.forEach((e,i)=>{
+    if(e.hp<=0)return; // skip dead
+    const btn=document.createElement('button');
+    btn.className='target-btn';
+    btn.innerHTML=`<div class="tb-name">${e.name}</div><div class="tb-hp">${e.hp} / ${e.maxHp} HP</div>`;
+    btn.onclick=()=>applyToTarget(i);
+    list.appendChild(btn);
+  });
+  document.getElementById('target-modal').classList.add('open');
+}
+
+function closeTargetModal(){
+  document.getElementById('target-modal').classList.remove('open');
+  pendingLogEntry=null;
+}
+
+function applyToTarget(enemyIdx){
+  if(!pendingLogEntry)return;
+  const entry=pendingLogEntry;
+  const enemy=bEnemies[enemyIdx];
+  const perTargetDmg=logEntryDmg(entry);
+  entry.targets=[enemy.name];
+  entry.totalBattleDmg=perTargetDmg;
+  enemy.hp=Math.max(0,enemy.hp-perTargetDmg);
+  bLog.unshift(entry);
+  recalcBattle();
+  document.getElementById('target-modal').classList.remove('open');
+  pendingLogEntry=null;
+  renderBattleAll();
+  checkWin();
+}
+
+// ══════════════════════════════════════════════
+// BATTLE RECALC
+// ══════════════════════════════════════════════
+function recalcBattle(){
+  let cum=0;
+  for(let i=bLog.length-1;i>=0;i--){cum+=bLog[i].castTime;bLog[i].timeAt=parseFloat(cum.toFixed(4));}
+}
+
+function battleTotalTime(){return bLog.length>0?bLog[0].timeAt:0;}
+
+function getCDRemaining(entry,curLog){
+  const tt=curLog===bLog?battleTotalTime():totalTime();
+  const castStart=entry.timeAt-entry.castTime;
+  return Math.max(0,parseFloat((castStart+entry.cooldown-tt).toFixed(4)));
+}
+
+// ══════════════════════════════════════════════
+// WIN / LOSE
+// ══════════════════════════════════════════════
+function checkWin(){
+  if(bOver)return;
+  if(bEnemies.every(e=>e.hp<=0)){
+    bOver=true;
+    if(bTimerInterval)clearInterval(bTimerInterval);
+    const tt=battleTotalTime();
+    const totalDmg=bLog.reduce((s,e)=>s+(e.totalBattleDmg||0),0);
+    showResult('win','⚔ VICTORY',`All enemies defeated!\n\nTime: ${tt.toFixed(2)}s\nTotal DMG: ${totalDmg}`);
+  }
+}
+
+function triggerLose(){
+  if(bOver)return;
+  bOver=true;
+  const totalDmg=bLog.reduce((s,e)=>s+(e.totalBattleDmg||0),0);
+  const remaining=bEnemies.filter(e=>e.hp>0).length;
+  showResult('lose','✕ DEFEAT',`Time ran out!\n\n${remaining} enem${remaining===1?'y':'ies'} remaining.\nTotal DMG dealt: ${totalDmg}`);
+}
+
+function showResult(type,title,msg){
+  const box=document.getElementById('result-box');
+  box.className='result-box '+type;
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-msg').textContent=msg;
+  document.getElementById('result-modal').classList.add('open');
+}
+
+function closeResultModal(){document.getElementById('result-modal').classList.remove('open');}
+
+// ══════════════════════════════════════════════
+// BATTLE TIMER (cast-time based)
+// ══════════════════════════════════════════════
+function updateBattleTimer(){
+  if(!bTimerTotal){
+    const el=document.getElementById('battle-timer-display');
+    el.textContent='∞';el.style.color='var(--muted)';return;
+  }
+  const elapsed=battleTotalTime();
+  const left=Math.max(0,bTimerTotal-elapsed);
+  const el=document.getElementById('battle-timer-display');
+  el.textContent=left.toFixed(2)+'s';
+  el.style.color=left<=10?'var(--red)':left<=30?'var(--yellow)':'var(--text)';
+  if(left<=0&&!bOver)triggerLose();
+}
+
+// ══════════════════════════════════════════════
+// BATTLE EFFECTS
+// ══════════════════════════════════════════════
+function getBattleActiveEffects(){
+  const tt=battleTotalTime();const map={};
+  for(let i=bLog.length-1;i>=0;i--){
+    const e=bLog[i];if(!e.effectName||e.effectDuration<=0)continue;
+    const end=(e.timeAt-e.castTime)+e.effectDuration;
+    if(!map[e.effectName])map[e.effectName]={stacks:e.stacks,endTimes:[]};
+    if(e.stacks)map[e.effectName].endTimes.push(end);
+    else map[e.effectName].endTimes=[end];
+  }
+  const active=[];
+  for(const[name,d]of Object.entries(map)){
+    const live=d.endTimes.filter(t=>t>tt);
+    if(live.length>0)active.push({name,stacks:live.length,remaining:Math.max(...live)-tt});
+  }
+  return active;
+}
+
+function renderBattleEffects(){
+  const active=getBattleActiveEffects();
+  const el=document.getElementById('battle-eff-list');if(!el)return;
+  if(active.length===0){el.innerHTML='<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>';return;}
+  el.innerHTML=active.map(eff=>`<span class="eff-chip">${eff.name} <span class="stk">${eff.stacks>1?'×'+eff.stacks+' ':''}${eff.remaining.toFixed(1)}s</span></span>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// BATTLE EDIT / DELETE
+// ══════════════════════════════════════════════
+function toggleBattleEdit(lid){
+  const el=document.getElementById('ble-'+lid);if(!el)return;
+  el.querySelector('.ef').classList.toggle('open');el.classList.toggle('editing');
+}
+
+function saveBattleEdit(lid){
+  const entry=bLog.find(e=>e.id===lid);if(!entry)return;
+  const el=document.getElementById('ble-'+lid);
+  const ci=parseInt(el.querySelector('.e-char').value);
+  entry.char=(bCharacters[ci]||bCharacters[0]).name;
+  entry.name=el.querySelector('.e-name').value.trim()||entry.name;
+  entry.desc=el.querySelector('.e-desc').value.trim();
+  entry.castTime=parseFloat(el.querySelector('.e-cast').value)||0;
+  entry.cooldown=parseFloat(el.querySelector('.e-cd').value)||0;
+  entry.dmgType=el.querySelector('.e-dmt').value;
+  entry.hitType=el.querySelector('.e-hit').value;
+  const fr=el.querySelector('.e-dmg').value;
+  entry.dmgFlat=fr!==''?parseFloat(fr):null;
+  entry.stat=parseFloat(el.querySelector('.e-stat').value)||0;
+  entry.mult=parseFloat(el.querySelector('.e-mult').value)||0;
+  entry.b1=parseFloat(el.querySelector('.e-b1').value)||0;
+  entry.b2=parseFloat(el.querySelector('.e-b2').value)||0;
+  entry.delay=parseFloat(el.querySelector('.e-delay').value)||0;
+  entry.dotInterval=parseFloat(el.querySelector('.e-doti').value)||0;
+  entry.dotDuration=parseFloat(el.querySelector('.e-dotd').value)||0;
+  entry.effectName=el.querySelector('.e-effn').value.trim();
+  entry.effectDuration=parseFloat(el.querySelector('.e-effd').value)||0;
+  entry.stacks=el.querySelector('.e-stacks').checked;
+  recalcBattle();recomputeEnemyHP();renderBattleAll();
+}
+
+function deleteBattleEntry(lid){
+  const idx=bLog.findIndex(e=>e.id===lid);if(idx===-1)return;
+  bLog.splice(idx,1);recalcBattle();recomputeEnemyHP();renderBattleAll();
+}
+
+function recomputeEnemyHP(){
+  bEnemies.forEach(e=>{e.hp=e.maxHp;});
+  for(let i=bLog.length-1;i>=0;i--){
+    const entry=bLog[i];
+    const perDmg=logEntryDmg(entry);
+    const tgts=entry.targets||[];
+    tgts.forEach(tname=>{const en=bEnemies.find(e=>e.name===tname);if(en)en.hp=Math.max(0,en.hp-perDmg);});
+    entry.totalBattleDmg=perDmg*(tgts.length||1);
+  }
+  if(bEnemies.length>0&&!bEnemies.every(e=>e.hp<=0))bOver=false;
+}
+
+// ══════════════════════════════════════════════
+// BATTLE RENDER
+// ══════════════════════════════════════════════
+function renderBattleAll(){renderEnemyGrid();renderBattleLog();renderBattleStats();renderBattleEffects();updateBattleTimer();}
+
+function renderEnemyGrid(){
+  const grid=document.getElementById('enemy-grid');
+  grid.innerHTML='';
+  bEnemies.forEach(e=>{
+    const pct=e.maxHp>0?(e.hp/e.maxHp)*100:0;
+    const barCls=pct>50?'hp-bar':pct>25?'hp-bar mid':'hp-bar low';
+    const dead=e.hp<=0;
+    const card=document.createElement('div');
+    card.className='enemy-card'+(dead?' dead':'');
+    card.innerHTML=`
+      <div class="en">${e.name}</div>
+      <div class="ehp-text">${dead?'DEAD':e.hp+' / '+e.maxHp}</div>
+      <div class="hp-bar-wrap"><div class="${barCls}" style="width:${pct}%"></div></div>
+      ${dead?'<div class="dead-label">DEFEATED</div>':''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderBattleLog(){
+  const area=document.getElementById('battle-log-area');
+  if(bLog.length===0){area.innerHTML='<div class="empty-log">// no actions yet</div>';return;}
+  area.innerHTML='';
+  bLog.forEach(entry=>{
+    const cdRem=getCDRemaining(entry,bLog);
+    const cdReady=cdRem<=0;
+    const perDmg=logEntryDmg(entry);
+    const totalDmg=entry.totalBattleDmg||perDmg;
+    const targetStr=entry.targets&&entry.targets.length>0
+      ?(entry.hitType==='multi'?'ALL: '+entry.targets.join(', '):'→ '+entry.targets[0]):'';
+    const isAdv=entry.dmgFlat===null&&(entry.stat||entry.mult);
+    const advLine=isAdv?` <span style="color:var(--muted);font-size:10px">[${entry.stat}×${entry.mult}%${entry.b1?'+B1:'+entry.b1+'%':''}${entry.b2?'+B2:'+entry.b2+'%':''}]</span>`:'';
+    let dmtLabel='';
+    if(entry.dmgType==='delayed')dmtLabel=`<div class="le-dmt dmt-del">⏱ DELAYED +${entry.delay}s → ${perDmg} dmg${advLine}</div>`;
+    if(entry.dmgType==='dot'){const t=entry.dotInterval>0?Math.floor(entry.dotDuration/entry.dotInterval):0;dmtLabel=`<div class="le-dmt dmt-dot">◈ DOT ${perDmg}/tick ×${t} per target</div>`;}
+    const charOpts=bCharacters.map((c,i)=>`<option value="${i}" ${c.name===entry.char?'selected':''}>${c.name}</option>`).join('');
+    const dmtOpts=['normal','delayed','dot'].map(t=>`<option value="${t}" ${entry.dmgType===t?'selected':''}>${t.toUpperCase()}</option>`).join('');
+    const hitOpts=`<option value="single" ${entry.hitType!=='multi'?'selected':''}>Single Target</option><option value="multi" ${entry.hitType==='multi'?'selected':''}>Multi Hit</option>`;
+    const el=document.createElement('div');
+    el.className='le battle-entry';el.id='ble-'+entry.id;
+    el.innerHTML=`
+      <div class="le-head">
+        <div class="le-left">
+          <div class="le-char">${entry.char}</div>
+          <div class="le-name">${entry.name} <span style="font-size:10px;color:${entry.hitType==='multi'?'#5dade2':'var(--muted)'}">[${entry.hitType==='multi'?'MULTI':'SINGLE'}]</span></div>
+          ${targetStr?`<div class="le-target">${targetStr}</div>`:''}
+        </div>
+        <div class="cdb ${cdReady?'rdy':'cool'}">${cdReady?'CD READY':'CD '+cdRem.toFixed(2)+'s'}</div>
+      </div>
+      <div class="le-meta">
+        <div class="mp dmg">DMG <span>${totalDmg}</span>${isAdv&&entry.dmgType==='normal'?advLine:''}</div>
+        <div class="mp">CAST <span>${entry.castTime}s</span></div>
+        <div class="mp">CD <span>${entry.cooldown}s</span></div>
+        <div class="mp">@ <span>${entry.timeAt.toFixed(2)}s</span></div>
+      </div>
+      ${entry.desc?`<div class="le-desc">${entry.desc}</div>`:''}
+      ${dmtLabel}
+      ${entry.effectName?`<div class="le-eff">⬡ ${entry.effectName}${entry.effectDuration>0?' — '+entry.effectDuration+'s':''}${entry.stacks?' [STACKS]':' [REFRESH]'}</div>`:''}
+      <div class="le-acts">
+        <button class="btn btn-secondary btn-xs" onclick="openBattleReuseModal(${entry.id})">USE AGAIN</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleBattleEdit(${entry.id})">EDIT</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteBattleEntry(${entry.id})">DELETE</button>
+      </div>
+      <div class="ef">
+        <div class="eg">
+          <div class="full"><label>Character</label><select class="e-char">${charOpts}</select></div>
+          <div class="full"><label>Ability Name</label><input type="text" class="e-name" value="${entry.name}"></div>
+          <div class="full"><label>Description</label><textarea class="e-desc">${entry.desc||''}</textarea></div>
+          <div><label>Cast Time (s)</label><input type="number" class="e-cast" value="${entry.castTime}" step="0.1"></div>
+          <div><label>Cooldown (s)</label><input type="number" class="e-cd" value="${entry.cooldown}" step="0.1"></div>
+          <div class="full"><label>Damage Type</label><select class="e-dmt">${dmtOpts}</select></div>
+          <div class="full"><label>Hit Type</label><select class="e-hit">${hitOpts}</select></div>
+          <div class="full"><label>Flat DMG / per tick <span style="color:var(--muted)">(empty = advanced)</span></label><input type="number" class="e-dmg" value="${entry.dmgFlat!==null&&entry.dmgFlat!==undefined?entry.dmgFlat:''}"></div>
+          <div><label>Stat</label><input type="number" class="e-stat" value="${entry.stat||0}"></div>
+          <div><label>Multiplier (%)</label><input type="number" class="e-mult" value="${entry.mult||0}"></div>
+          <div><label>Buff 1 (%)</label><input type="number" class="e-b1" value="${entry.b1||0}"></div>
+          <div><label>Buff 2 (%)</label><input type="number" class="e-b2" value="${entry.b2||0}"></div>
+          <div><label>Delay (s)</label><input type="number" class="e-delay" value="${entry.delay||0}" step="0.1"></div>
+          <div><label>DoT Interval (s)</label><input type="number" class="e-doti" value="${entry.dotInterval||0}" step="0.1"></div>
+          <div><label>DoT Duration (s)</label><input type="number" class="e-dotd" value="${entry.dotDuration||0}" step="0.1"></div>
+          <div><label>Effect Name</label><input type="text" class="e-effn" value="${entry.effectName||''}"></div>
+          <div><label>Effect Duration (s)</label><input type="number" class="e-effd" value="${entry.effectDuration||0}" step="0.1"></div>
+          <div class="full"><div class="cb-row"><input type="checkbox" class="e-stacks" ${entry.stacks?'checked':''}><label>Effect stacks</label></div></div>
+        </div>
+        <div class="ea">
+          <button class="btn btn-green btn-xs" onclick="saveBattleEdit(${entry.id})">SAVE</button>
+          <button class="btn btn-ghost btn-xs" onclick="toggleBattleEdit(${entry.id})">CANCEL</button>
+        </div>
+      </div>
+    `;
+    area.appendChild(el);
+  });
+}
+
+function renderBattleStats(){
+  const tt=battleTotalTime();
+  const totalDmg=bLog.reduce((s,e)=>s+(e.totalBattleDmg||0),0);
+  const dps=tt>0?totalDmg/tt:0;
+  const grid=document.getElementById('battle-csg');
+  grid.innerHTML='';
+  // Team summary row
+  const summary=document.createElement('div');
+  summary.style.cssText='display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
+  ['Time: '+tt.toFixed(2)+'s','Total DMG: '+totalDmg,'DPS: '+dps.toFixed(2)].forEach(txt=>{
+    const s=document.createElement('div');
+    s.style.cssText='font-family:var(--mono);font-size:11px;color:var(--yellow);background:var(--bg);border:1px solid var(--border);padding:4px 10px;';
+    s.textContent=txt;
+    summary.appendChild(s);
+  });
+  grid.appendChild(summary);
+  // Per character cards
+  const cardRow=document.createElement('div');
+  cardRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
+  bCharacters.forEach((charObj,idx)=>{
+    const entries=bLog.filter(e=>e.char===charObj.name);
+    const cDmg=entries.reduce((s,e)=>s+(e.totalBattleDmg||0),0);
+    const cCast=entries.reduce((s,e)=>s+e.castTime,0);
+    const pct=totalDmg>0?((cDmg/totalDmg)*100).toFixed(1):'0.0';
+    const cdps=cCast>0?(cDmg/cCast).toFixed(2):'0.00';
+    const isP=charObj.presetId!==null;
+    const card=document.createElement('div');
+    card.className='csc'+(isP?' preset':'');
+    if(isP)card.onclick=()=>{ppContext='battle';openPP(idx,bCharacters);}
+    card.innerHTML=`
+      <div class="cn">${charObj.name}${isP?`<span class="pbadge">#${charObj.presetId}</span>`:''}</div>
+      <div class="cr"><span>DMG</span><strong>${cDmg}</strong></div>
+      <div class="cr"><span>%TEAM</span><strong>${pct}%</strong></div>
+      <div class="cr"><span>CAST</span><strong>${cCast.toFixed(2)}s</strong></div>
+      <div class="cr"><span>DPS</span><strong>${cdps}</strong></div>
+      ${isP?'<div class="tap-hint">TAP FOR ABILITIES</div>':''}
+    `;
+    cardRow.appendChild(card);
+  });
+  grid.appendChild(cardRow);
+}
+
+// ══════════════════════════════════════════════
+// PRESET PANEL (shared calc + battle)
+// ══════════════════════════════════════════════
+function openPP(charIdx,chars){
+  const charList=chars||characters;
+  const charObj=charList[charIdx];
+  if(!charObj||charObj.presetId===null)return;
+  const pc=presetChars.find(c=>c.id===charObj.presetId);
+  if(!pc)return;
+  ppCharIdx=charIdx;
+  document.getElementById('pp-title').textContent=pc.name.toUpperCase()+' — ABILITIES';
+  const listEl=document.getElementById('pp-list');listEl.innerHTML='';
+  const curLog=ppContext==='battle'?bLog:log;
+  if(pc.abilities.length===0){
+    listEl.innerHTML='<div class="pp-no-ab">No abilities saved.</div>';
+  } else {
+    pc.abilities.forEach(ab=>{
+      const td=abTotalDmg(ab);
+      const recent=curLog.find(e=>e.char===charObj.name&&e.name===ab.name);
+      const cdRem=recent?getCDRemaining(recent,curLog):0;
+      const cdReady=cdRem<=0;
+      let typeInfo='';
+      if(ab.dmgType==='delayed')typeInfo=`<span style="color:#e67e22"> DELAYED</span>`;
+      if(ab.dmgType==='dot'){const t=ab.dotInterval>0?Math.floor(ab.dotDuration/ab.dotInterval):0;typeInfo=`<span style="color:#8e44ad"> DOT×${t}</span>`;}
+      const htInfo=ab.hitType==='multi'?`<span style="color:#5dade2"> [MULTI]</span>`:`<span style="color:var(--muted)"> [SINGLE]</span>`;
+      const abEnc=encodeURIComponent(JSON.stringify(ab));
+      const row=document.createElement('div');row.className='pp-row';
+      row.innerHTML=`
+        <div class="pp-info">
+          <div class="pp-abn">${ab.name}${typeInfo}${htInfo}</div>
+          <div class="pp-meta">DMG <span>${td}</span> · CAST <span>${ab.castTime}s</span> · CD <span>${ab.cooldown}s</span>${ab.effectName?` · ⬡ <span>${ab.effectName}</span>`:''}</div>
+          ${ab.desc?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted);font-style:italic">${ab.desc}</div>`:''}
+        </div>
+        <div class="pp-right">
+          <div class="cdb ${cdReady?'rdy':'cool'}">${cdReady?'CD READY':'CD '+cdRem.toFixed(2)+'s'}</div>
+          <button class="btn btn-secondary btn-xs" onclick="usePPAbility('${abEnc}',${charIdx})">USE</button>
+        </div>
+      `;
+      listEl.appendChild(row);
+    });
+  }
+  document.getElementById('pp').classList.add('open');
+}
+
+function usePPAbility(abEnc,charIdx){
+  const ab=JSON.parse(decodeURIComponent(abEnc));
+  openPresetUseModal(ab,charIdx);
+}
+
+function closePP(){document.getElementById('pp').classList.remove('open');}
+
+// ══════════════════════════════════════════════
+// DMG CALC RECALC / HELPERS
+// ══════════════════════════════════════════════
+function recalc(){
+  let cum=0;
+  for(let i=log.length-1;i>=0;i--){cum+=log[i].castTime;log[i].timeAt=parseFloat(cum.toFixed(4));}
+}
+function totalTime(){return log.length>0?log[0].timeAt:0;}
+
+function logEntryDmg(e){
+  const base=resolveDmg(e.dmgFlat,e.stat,e.mult,e.b1,e.b2);
+  if(e.dmgType==='dot'){if(!e.dotInterval||e.dotInterval<=0)return 0;return Math.floor(e.dotDuration/e.dotInterval)*base;}
+  return base;
+}
+function abTotalDmg(ab){
+  const base=resolveDmg(ab.dmgFlat,ab.stat,ab.mult,ab.b1,ab.b2);
+  if(ab.dmgType==='dot'){if(!ab.dotInterval||ab.dotInterval<=0)return 0;return Math.floor(ab.dotDuration/ab.dotInterval)*base;}
+  return base;
+}
+
+// ══════════════════════════════════════════════
+// DMG CALC EDIT / DELETE
+// ══════════════════════════════════════════════
+function toggleEdit(lid){
+  const el=document.getElementById('le-'+lid);if(!el)return;
+  el.querySelector('.ef').classList.toggle('open');el.classList.toggle('editing');
+}
+function saveEdit(lid){
+  const entry=log.find(e=>e.id===lid);if(!entry)return;
+  const el=document.getElementById('le-'+lid);
+  const ci=parseInt(el.querySelector('.e-char').value);
+  entry.char=(characters[ci]||characters[0]).name;
+  entry.name=el.querySelector('.e-name').value.trim()||entry.name;
+  entry.desc=el.querySelector('.e-desc').value.trim();
+  entry.castTime=parseFloat(el.querySelector('.e-cast').value)||0;
+  entry.cooldown=parseFloat(el.querySelector('.e-cd').value)||0;
+  entry.dmgType=el.querySelector('.e-dmt').value;
+  entry.hitType=el.querySelector('.e-hit').value;
+  const fr=el.querySelector('.e-dmg').value;
+  entry.dmgFlat=fr!==''?parseFloat(fr):null;
+  entry.stat=parseFloat(el.querySelector('.e-stat').value)||0;
+  entry.mult=parseFloat(el.querySelector('.e-mult').value)||0;
+  entry.b1=parseFloat(el.querySelector('.e-b1').value)||0;
+  entry.b2=parseFloat(el.querySelector('.e-b2').value)||0;
+  entry.delay=parseFloat(el.querySelector('.e-delay').value)||0;
+  entry.dotInterval=parseFloat(el.querySelector('.e-doti').value)||0;
+  entry.dotDuration=parseFloat(el.querySelector('.e-dotd').value)||0;
+  entry.effectName=el.querySelector('.e-effn').value.trim();
+  entry.effectDuration=parseFloat(el.querySelector('.e-effd').value)||0;
+  entry.stacks=el.querySelector('.e-stacks').checked;
+  recalc();renderAll();
+}
+function deleteEntry(lid){
+  const idx=log.findIndex(e=>e.id===lid);if(idx===-1)return;
+  log.splice(idx,1);recalc();renderAll();
+}
+
+// ══════════════════════════════════════════════
+// EFFECTS (calc mode only)
+// ══════════════════════════════════════════════
+function getActiveEffects(){
+  const tt=totalTime();const map={};
+  for(let i=log.length-1;i>=0;i--){
+    const e=log[i];if(!e.effectName||e.effectDuration<=0)continue;
+    const end=(e.timeAt-e.castTime)+e.effectDuration;
+    if(!map[e.effectName])map[e.effectName]={stacks:e.stacks,endTimes:[]};
+    if(e.stacks)map[e.effectName].endTimes.push(end);
+    else map[e.effectName].endTimes=[end];
+  }
+  const active=[];
+  for(const[name,d]of Object.entries(map)){
+    const live=d.endTimes.filter(t=>t>tt);
+    if(live.length>0)active.push({name,stacks:live.length,remaining:Math.max(...live)-tt});
+  }
+  return active;
+}
+
+// ══════════════════════════════════════════════
+// DMG CALC RENDER
+// ══════════════════════════════════════════════
+function renderAll(){renderLog();renderStats();renderEffects();}
+
+function renderLog(){
+  const area=document.getElementById('log-area');
+  if(log.length===0){area.innerHTML='<div class="empty-log">// no abilities logged yet</div>';return;}
+  area.innerHTML='';
+  log.forEach(entry=>{
+    const cdRem=getCDRemaining(entry,log);
+    const cdReady=cdRem<=0;
+    const td=logEntryDmg(entry);
+    const baseDmg=resolveDmg(entry.dmgFlat,entry.stat,entry.mult,entry.b1,entry.b2);
+    const isAdv=entry.dmgFlat===null&&(entry.stat||entry.mult);
+    const advLine=isAdv?` <span style="color:var(--muted);font-size:10px">[${entry.stat}×${entry.mult}%${entry.b1?'+B1:'+entry.b1+'%':''}${entry.b2?'+B2:'+entry.b2+'%':''}]</span>`:'';
+    const charOpts=characters.map((c,i)=>`<option value="${i}" ${c.name===entry.char?'selected':''}>${c.presetId?c.name+' [#'+c.presetId+']':c.name}</option>`).join('');
+    const dmtOpts=['normal','delayed','dot'].map(t=>`<option value="${t}" ${entry.dmgType===t?'selected':''}>${t.toUpperCase()}</option>`).join('');
+    const hitOpts=`<option value="single" ${entry.hitType!=='multi'?'selected':''}>Single Target</option><option value="multi" ${entry.hitType==='multi'?'selected':''}>Multi Hit</option>`;
+    let dmtLabel='';
+    if(entry.dmgType==='delayed')dmtLabel=`<div class="le-dmt dmt-del">⏱ DELAYED +${entry.delay}s → ${baseDmg} dmg${advLine}</div>`;
+    if(entry.dmgType==='dot'){const t=entry.dotInterval>0?Math.floor(entry.dotDuration/entry.dotInterval):0;dmtLabel=`<div class="le-dmt dmt-dot">◈ DOT ${baseDmg}/tick every ${entry.dotInterval}s for ${entry.dotDuration}s (${t}×=${td})${advLine}</div>`;}
+    const el=document.createElement('div');el.className='le';el.id='le-'+entry.id;
+    el.innerHTML=`
+      <div class="le-head">
+        <div class="le-left">
+          <div class="le-char">${entry.char}</div>
+          <div class="le-name">${entry.name} <span style="font-size:10px;color:var(--muted)">[${(entry.hitType||'single').toUpperCase()}]</span></div>
+        </div>
+        <div class="cdb ${cdReady?'rdy':'cool'}">${cdReady?'CD READY':'CD '+cdRem.toFixed(2)+'s'}</div>
+      </div>
+      <div class="le-meta">
+        <div class="mp dmg">DMG <span>${td}</span>${isAdv&&entry.dmgType==='normal'?advLine:''}</div>
+        <div class="mp">CAST <span>${entry.castTime}s</span></div>
+        <div class="mp">CD <span>${entry.cooldown}s</span></div>
+        <div class="mp">@ <span>${entry.timeAt.toFixed(2)}s</span></div>
+      </div>
+      ${entry.desc?`<div class="le-desc">${entry.desc}</div>`:''}
+      ${dmtLabel}
+      ${entry.effectName?`<div class="le-eff">⬡ ${entry.effectName}${entry.effectDuration>0?' — '+entry.effectDuration+'s':''}${entry.stacks?' [STACKS]':' [REFRESH]'}</div>`:''}
+      <div class="le-acts">
+        <button class="btn btn-secondary btn-xs" onclick="openReuseModal(${entry.id})">USE AGAIN</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">EDIT</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteEntry(${entry.id})">DELETE</button>
+      </div>
+      <div class="ef">
+        <div class="eg">
+          <div class="full"><label>Character</label><select class="e-char">${charOpts}</select></div>
+          <div class="full"><label>Ability Name</label><input type="text" class="e-name" value="${entry.name}"></div>
+          <div class="full"><label>Description</label><textarea class="e-desc">${entry.desc||''}</textarea></div>
+          <div><label>Cast Time (s)</label><input type="number" class="e-cast" value="${entry.castTime}" step="0.1"></div>
+          <div><label>Cooldown (s)</label><input type="number" class="e-cd" value="${entry.cooldown}" step="0.1"></div>
+          <div class="full"><label>Damage Type</label><select class="e-dmt">${dmtOpts}</select></div>
+          <div class="full"><label>Hit Type</label><select class="e-hit">${hitOpts}</select></div>
+          <div class="full"><label>Flat DMG / per tick <span style="color:var(--muted)">(empty = advanced)</span></label><input type="number" class="e-dmg" value="${entry.dmgFlat!==null&&entry.dmgFlat!==undefined?entry.dmgFlat:''}"></div>
+          <div><label>Stat</label><input type="number" class="e-stat" value="${entry.stat||0}"></div>
+          <div><label>Multiplier (%)</label><input type="number" class="e-mult" value="${entry.mult||0}"></div>
+          <div><label>Buff 1 (%)</label><input type="number" class="e-b1" value="${entry.b1||0}"></div>
+          <div><label>Buff 2 (%)</label><input type="number" class="e-b2" value="${entry.b2||0}"></div>
+          <div><label>Delay (s)</label><input type="number" class="e-delay" value="${entry.delay||0}" step="0.1"></div>
+          <div><label>DoT Interval (s)</label><input type="number" class="e-doti" value="${entry.dotInterval||0}" step="0.1"></div>
+          <div><label>DoT Duration (s)</label><input type="number" class="e-dotd" value="${entry.dotDuration||0}" step="0.1"></div>
+          <div><label>Effect Name</label><input type="text" class="e-effn" value="${entry.effectName||''}"></div>
+          <div><label>Effect Duration (s)</label><input type="number" class="e-effd" value="${entry.effectDuration||0}" step="0.1"></div>
+          <div class="full"><div class="cb-row"><input type="checkbox" class="e-stacks" ${entry.stacks?'checked':''}><label>Effect stacks</label></div></div>
+        </div>
+        <div class="ea">
+          <button class="btn btn-green btn-xs" onclick="saveEdit(${entry.id})">SAVE</button>
+          <button class="btn btn-ghost btn-xs" onclick="toggleEdit(${entry.id})">CANCEL</button>
+        </div>
+      </div>
+    `;
+    area.appendChild(el);
+  });
+}
+
+function renderStats(){
+  const tt=totalTime();
+  const totalDmg=log.reduce((s,e)=>s+logEntryDmg(e),0);
+  const dps=tt>0?totalDmg/tt:0;
+  document.getElementById('s-time').textContent=tt.toFixed(2)+'s';
+  document.getElementById('s-dmg').textContent=totalDmg;
+  document.getElementById('s-dps').textContent=dps.toFixed(2);
+  const grid=document.getElementById('csg');grid.innerHTML='';
+  characters.forEach((charObj,idx)=>{
+    const entries=log.filter(e=>e.char===charObj.name);
+    const cDmg=entries.reduce((s,e)=>s+logEntryDmg(e),0);
+    const cCast=entries.reduce((s,e)=>s+e.castTime,0);
+    const pct=totalDmg>0?((cDmg/totalDmg)*100).toFixed(1):'0.0';
+    const cdps=cCast>0?(cDmg/cCast).toFixed(2):'0.00';
+    const isP=charObj.presetId!==null;
+    const card=document.createElement('div');
+    card.className='csc'+(isP?' preset':'');
+    if(isP)card.onclick=()=>{ppContext='calc';openPP(idx,characters);}
+    card.innerHTML=`
+      <div class="cn">${charObj.name}${isP?`<span class="pbadge">#${charObj.presetId}</span>`:''}</div>
+      <div class="cr"><span>DMG</span><strong>${cDmg}</strong></div>
+      <div class="cr"><span>%TEAM</span><strong>${pct}%</strong></div>
+      <div class="cr"><span>CAST</span><strong>${cCast.toFixed(2)}s</strong></div>
+      <div class="cr"><span>DPS</span><strong>${cdps}</strong></div>
+      ${isP?'<div class="tap-hint">TAP FOR ABILITIES</div>':''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderEffects(){
+  const active=getActiveEffects();
+  const el=document.getElementById('eff-list');
+  if(active.length===0){el.innerHTML='<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">none</span>';return;}
+  el.innerHTML=active.map(eff=>`<span class="eff-chip">${eff.name} <span class="stk">${eff.stacks>1?'×'+eff.stacks+' ':''}${eff.remaining.toFixed(1)}s</span></span>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// ALERT / CONFIRM / RESET MODALS
+// ══════════════════════════════════════════════
+function showAlert(msg,onForce){
+  document.getElementById('alert-msg').textContent=msg;
+  document.getElementById('alert-modal').classList.add('open');
+  document.getElementById('alert-force').onclick=()=>{closeAlert();if(onForce)onForce();};
+}
+function closeAlert(){document.getElementById('alert-modal').classList.remove('open');}
+
+function showCF(title,msg,onOk){
+  document.getElementById('cf-title').textContent=title;
+  document.getElementById('cf-msg').textContent=msg;
+  document.getElementById('cf-modal').classList.add('open');
+  document.getElementById('cf-ok').onclick=()=>{closeCF();if(onOk)onOk();};
+}
+function closeCF(){document.getElementById('cf-modal').classList.remove('open');}
+
+function openResetModal(){document.getElementById('reset-modal').classList.add('open');}
+function closeResetModal(){document.getElementById('reset-modal').classList.remove('open');}
+function doReset(){log=[];nextLogId=1;closeResetModal();renderAll();}
+function goToSetup(){
+  log=[];nextLogId=1;characters=[];
+  closeResetModal();
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  renderLibrary();
+}
+
+function openBattleResetModal(){document.getElementById('battle-reset-modal').classList.add('open');}
+function closeBattleResetModal(){document.getElementById('battle-reset-modal').classList.remove('open');}
+function endBattle(){
+  if(bTimerInterval)clearInterval(bTimerInterval);
+  bLog=[];bNextLogId=1;bEnemies=[];bCharacters=[];bOver=false;bTimerLeft=0;
+  closeBattleResetModal();
+  document.getElementById('battle-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  renderLibrary();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.getElementById('lm-dmg-t').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('lm-tick-i').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('lm-tick-d').addEventListener('input',()=>updateDotPrev('lm'));
+document.getElementById('ae-dmg-t').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('ae-tick-i').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('ae-tick-d').addEventListener('input',()=>updateDotPrev('ae'));
+document.getElementById('new-pc-name').addEventListener('keydown',e=>{if(e.key==='Enter')addPresetChar();});
+document.getElementById('new-pc-id').addEventListener('keydown',e=>{if(e.key==='Enter')addPresetChar();});
+renderLibrary();
+</script>
+</body>
+</html>
